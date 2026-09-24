@@ -336,22 +336,19 @@ function computeBaseXP(entry,streak){
   return {xp,msgs};
 }
 function computeBadges(list,streak,longest){ return BADGE_DEFS.filter(b=>b.test(list,streak,longest)).map(b=>b.id); }
-function openOv(ov){ ov.style.display='flex'; requestAnimationFrame(()=>ov.classList.add('show')); }
-function closeOv(ov){ ov.classList.remove('show'); setTimeout(()=>{ if(!ov.classList.contains('show')) ov.style.display='none'; },260); }
-
 let toastTimer=null;
 function showToast(title,msgs,special){
   const ov=document.getElementById('toastOv'); const box=document.getElementById('toastBox');
   box.classList.toggle('special',!!special);
   document.getElementById('toastTtl').textContent=title;
   document.getElementById('toastMsg').innerHTML=msgs.map(m=>`• ${m}`).join('<br>');
-  openOv(ov);
+  ov.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>closeOv(ov),special?7000:5500);
+  toastTimer=setTimeout(()=>ov.classList.remove('show'),special?7000:5500);
 }
-document.getElementById('toastOv').onclick=()=>{ closeOv(document.getElementById('toastOv')); clearTimeout(toastTimer); };
-document.getElementById('dayClose').onclick=()=>closeOv(document.getElementById('dayOv'));
-document.getElementById('dayOv').onclick=(e)=>{ if(e.target.id==='dayOv') closeOv(document.getElementById('dayOv')); };
+document.getElementById('toastOv').onclick=()=>{ document.getElementById('toastOv').classList.remove('show'); clearTimeout(toastTimer); };
+document.getElementById('dayClose').onclick=()=>document.getElementById('dayOv').classList.remove('show');
+document.getElementById('dayOv').onclick=(e)=>{ if(e.target.id==='dayOv') document.getElementById('dayOv').classList.remove('show'); };
 
 function currentStreak(list,fromTime){
   const daysSet=new Set(list.map(e=>new Date(e.time).toDateString()));
@@ -433,8 +430,8 @@ document.querySelectorAll('#toneBtns .opt').forEach(b=>{
 });
 (function(){ const t=getTone(); const btn=document.querySelector(`#toneBtns .opt[data-tone="${t}"]`); if(btn) btn.classList.add('sel'); })();
 
-document.getElementById('dataClose').onclick=()=>closeOv(document.getElementById('dataOv'));
-document.getElementById('dataOv').onclick=(e)=>{ if(e.target.id==='dataOv') closeOv(document.getElementById('dataOv')); };
+document.getElementById('dataClose').onclick=()=>document.getElementById('dataOv').classList.remove('show');
+document.getElementById('dataOv').onclick=(e)=>{ if(e.target.id==='dataOv') document.getElementById('dataOv').classList.remove('show'); };
 
 document.getElementById('btnExport').onclick=()=>{
   document.getElementById('dataTtl').textContent='导出数据';
@@ -442,17 +439,17 @@ document.getElementById('btnExport').onclick=()=>{
     <button class="dmbtn" id="doExportFile">导出为文件</button>
     <button class="dmbtn" id="doExportCopy">复制到剪贴板</button>
   </div>`;
-  openOv(document.getElementById('dataOv'));
+  document.getElementById('dataOv').classList.add('show');
   document.getElementById('doExportFile').onclick=()=>{
     const blob=new Blob([exportPayload()],{type:'application/json'});
     const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`便笺备份_${Date.now()}.json`;
     document.body.appendChild(a); a.click(); a.remove();
-    closeOv(document.getElementById('dataOv'));
+    document.getElementById('dataOv').classList.remove('show');
   };
   document.getElementById('doExportCopy').onclick=async()=>{
     try{ await navigator.clipboard.writeText(exportPayload()); alert('已复制到剪贴板'); }
     catch(e){ alert('复制失败，可尝试"导出为文件"'); }
-    closeOv(document.getElementById('dataOv'));
+    document.getElementById('dataOv').classList.remove('show');
   };
 };
 
@@ -462,7 +459,7 @@ document.getElementById('btnImport').onclick=()=>{
     <label class="dmbtn" style="cursor:pointer;display:block;text-align:center;margin-bottom:8px;">选择文件导入<input type="file" id="doImportFile" accept="application/json" style="display:none"></label>
     <textarea id="importArea" placeholder="或将导出的内容粘贴到这里"></textarea>
     <button class="dmbtn" id="doImportConfirm" style="width:100%">粘贴内容导入</button>`;
-  openOv(document.getElementById('dataOv'));
+  document.getElementById('dataOv').classList.add('show');
   document.getElementById('doImportFile').addEventListener('change',(e)=>{
     const f=e.target.files[0]; if(!f) return;
     const reader=new FileReader(); reader.onload=()=>importData(reader.result); reader.readAsText(f);
@@ -551,7 +548,7 @@ function renderCalendar(list){
       if(!msg) msg='这一天还没有记录。';
       document.getElementById('dayTtl').textContent=dateStr;
       document.getElementById('dayMsg').innerHTML=msg;
-      openOv(document.getElementById('dayOv'));
+      document.getElementById('dayOv').classList.add('show');
     };
   });
 }

@@ -16,14 +16,14 @@
   :root:not([data-theme="light"]){--bg:#1a1815;--card:#26221c;--text:#eee6d8;--sub:#9c9285;--accent:#e0a860;--accent2:#8fb97e;--line:#38332b;--danger:#e0796a;--gold:#e8b955;--gold2:#c9922f;}
 }
 :root[data-theme="dark"]{--bg:#1a1815;--card:#26221c;--text:#eee6d8;--sub:#9c9285;--accent:#e0a860;--accent2:#8fb97e;--line:#38332b;--danger:#e0796a;--gold:#e8b955;--gold2:#c9922f;}
-html{height:100%;}
+html{height:100%;background:var(--bg);}
 *{box-sizing:border-box;}
 body{margin:0;background:var(--bg);color:var(--text);font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;min-height:100%;-webkit-tap-highlight-color:transparent;}
 .wrap{max-width:520px;margin:0 auto;padding:16px 14px calc(96px + env(safe-area-inset-bottom,0px));}
-.header{text-align:center;margin-bottom:12px;}
-h1{font-family:'Noto Serif SC',serif;font-size:22px;margin:6px 0 2px;letter-spacing:1px;font-weight:700;}
-.tag{color:var(--sub);font-size:12px;}
-.hr-deco{width:40px;height:2px;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:3px;margin:9px auto 0;}
+.header{text-align:center;margin-bottom:22px;padding-top:10px;}
+h1{font-family:'Noto Serif SC',serif;font-size:27px;margin:10px 0 8px;letter-spacing:4px;font-weight:600;}
+.tag{color:var(--sub);font-size:13px;letter-spacing:.5px;}
+.hr-deco{width:50px;height:2px;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:3px;margin:16px auto 0;opacity:.75;}
 .hint{font-size:11px;color:var(--sub);text-align:center;margin:0 0 12px;line-height:1.5;font-style:italic;}
 .tabs{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:520px;display:flex;gap:5px;background:var(--card);border:1px solid var(--line);border-top:1px solid var(--line);border-radius:16px 16px 0 0;padding:7px 6px calc(7px + env(safe-area-inset-bottom,0px));z-index:20;box-shadow:0 -4px 16px rgba(0,0,0,.08);}
 .tab-btn{flex:1;padding:8px 2px;border:none;background:transparent;border-radius:10px;font-size:12.5px;color:var(--sub);cursor:pointer;font-weight:600;transition:all .15s;}
@@ -112,7 +112,7 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
 <div class="wrap">
   <div class="header">
     <h1>便笺</h1>
-    <div class="tag">记录每一次点滴，从容自在</div>
+    <div class="tag">记录每一次「大」事，见证自己的规律</div>
     <div class="hr-deco"></div>
   </div>
 

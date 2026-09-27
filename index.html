@@ -1042,10 +1042,12 @@ function renderPlant(list){
   }
   maybeRefreshMonologue();
   const monoEl=document.getElementById('plantMono'); if(monoEl) monoEl.textContent=currentMonologue;
-  const evtMsg=localStorage.getItem('poop_plant_lastEvtMsg'); const evtAt=parseFloat(localStorage.getItem('poop_plant_lastEvtAt'));
+  let evtMsg=localStorage.getItem('poop_plant_lastEvtMsg'); const evtAt=parseFloat(localStorage.getItem('poop_plant_lastEvtAt'));
   const evtEl=document.getElementById('plantEvt');
   if(evtEl){
     if(evtMsg && evtAt){
+      const pn=getPlantName();
+      if(pn){ evtMsg=evtMsg.replace(new RegExp('^'+pn.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'[：:,，]\\s*'),''); }
       const hrs=Math.floor((Date.now()-evtAt)/3600000);
       const agoTxt = hrs<1?'刚刚':(hrs<24?`${hrs}小时前`:`${Math.floor(hrs/24)}天前`);
       evtEl.textContent=`${agoTxt}：${evtMsg}`;

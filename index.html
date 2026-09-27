@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>此事有记</title>
-<link rel="icon" id="faviconLink" href="">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -200,11 +199,6 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
 
   <div class="page" id="page-stats">
     <div class="card"><h2>便便情报</h2>
-      <div class="stat-row" id="statsOverview">
-        <div class="stat-box"><div class="num" id="ovTotal">0</div><div class="lbl">累计记录</div></div>
-        <div class="stat-box"><div class="num" id="ovDays">0</div><div class="lbl">记录天数</div></div>
-        <div class="stat-box"><div class="num" id="ovTogether">0</div><div class="lbl">共同生活</div></div>
-      </div>
       <div class="analysis" id="analysisBox">暂无便便记录，快去记录一次吧～</div>
     </div>
     <div class="card">
@@ -243,7 +237,6 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
     <div class="card"><h2>Language / 语言</h2><div class="tonebtns" id="langBtns">
       <div class="opt" data-lang="zh">中文</div><div class="opt" data-lang="en">English</div>
     </div></div>
-    <div class="card"><h2>网页图标</h2><div class="nameRow"><input id="faviconInput" type="text" maxlength="4" placeholder="🌱"></div><div style="font-size:10.5px;color:var(--sub);margin-top:6px">填一个喜欢的 emoji，会用作这个页面的图标</div></div>
     <button class="modal-close" id="settingsClose">关闭</button>
   </div></div>
 
@@ -908,7 +901,7 @@ function settleEvents(){
   if(now<next) return;
   const msgs=[]; let count=0;
   while(now>=next && count<EVENT_MAX){
-    const ev=weightedPick(EVENTS); if(ev.delta) setBase(getBase()+ev.delta); msgs.push(maybePlantName(ev.msg,0.35));
+    const ev=weightedPick(EVENTS); if(ev.delta) setBase(getBase()+ev.delta); msgs.push(ev.msg);
     next+=randEventGapMs(); count++;
   }
   if(now>=next) next=now+randEventGapMs();
@@ -929,7 +922,7 @@ function pickMonologue(){
 function maybeRefreshMonologue(){
   const last=parseFloat(localStorage.getItem('poop_plant_monoTime'))||0;
   if(!currentMonologue || Date.now()-last>=MONO_HOURS*3600000){
-    currentMonologue=maybePlantName(pickMonologue(),0.3);
+    currentMonologue=maybePlantName(pickMonologue(),0.35);
     localStorage.setItem('poop_plant_monoTime', Date.now());
   }
 }
@@ -1121,20 +1114,24 @@ function render(){
   const shown=BADGE_DEFS.filter(b=>badgeIds.includes(b.id)).map(b=>`<span class="badge">${b.ic} ${b.label}</span>`);
   badgeEl.innerHTML = shown.length ? shown.join('') : '<span style="color:var(--sub);font-size:13px">继续记录便便，留下更多脚印～</span>';
 }
-function applyFavicon(){
-  const emo=localStorage.getItem('poop_plant_favicon')||'🌱';
-  const svg=`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>${emo}</text></svg>`;
-  const link=document.getElementById('faviconLink');
-  if(link) link.href='data:image/svg+xml,'+encodeURIComponent(svg);
-}
-const faviconInputEl=document.getElementById('faviconInput');
-faviconInputEl.value=localStorage.getItem('poop_plant_favicon')||'🌱';
-faviconInputEl.addEventListener('input',()=>{ const v=faviconInputEl.value.trim()||'🌱'; try{ localStorage.setItem('poop_plant_favicon',v); }catch(e){} applyFavicon(); });
-applyFavicon();
 render();
 startLingerTimer();
 
-document.querySelectorAll('.popt').forEach(b=>{ b.onclick=()=>{ statsPeriod=b.dataset.period; renderStatsPeriod(); }; });
+(function(){
+  const now=new Date();
+  const lastDay=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const isMonthEnd=now.getDate()===lastDay;
+  const isYearEnd=now.getMonth()===11 && now.getDate()===31;
+  const toggle=document.querySelector('.periodToggle');
+  if(toggle){
+    toggle.style.display=(isMonthEnd||isYearEnd)?'flex':'none';
+    toggle.querySelectorAll('.popt').forEach(b=>{
+      if(b.dataset.period==='month') b.style.display=isMonthEnd||isYearEnd?'':'none';
+      if(b.dataset.period==='year') b.style.display=isYearEnd?'':'none';
+      b.onclick=()=>{ statsPeriod=b.dataset.period; renderStatsPeriod(); };
+    });
+  }
+})();
 document.getElementById('gotoFertBtn').onclick=()=>document.querySelector('[data-p="record"]').click();
 document.getElementById('btnSeed').onclick=()=>{ if(confirm('留种会让当前这株植物的养分归零，重新开始新一代。它的记录会保留在档案馆里，确定吗？')) startNewGeneration(); };
 document.getElementById('btnArchive').onclick=()=>{

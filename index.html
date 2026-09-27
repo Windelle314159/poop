@@ -814,7 +814,32 @@ function getFertLog(){ try{return JSON.parse(localStorage.getItem('poop_plant_fe
 function setFertLog(l){ try{localStorage.setItem('poop_plant_fertLog',JSON.stringify(l));}catch(e){} }
 function fertLog24hTotal(){ const now=Date.now(); const l=getFertLog().filter(e=>now-e.time<86400000); setFertLog(l); return l.reduce((s,e)=>s+e.amt,0); }
 function logFert(amt){ const l=getFertLog(); l.push({amt,time:Date.now()}); setFertLog(l); }
-function maybePlantName(text,prob){ const n=getPlantName(); if(n && Math.random()<(prob===undefined?0.3:prob)) return `${n}：${text}`; return text; }
+const MONO_NAMED={
+ '阳光晒在叶片上，暖暖的':n=>`${n}晒着阳光，叶片暖暖的`,
+ '根须在土里悄悄往下探了探':n=>`${n}的根须在土里悄悄往下探了探`,
+ '有点渴，但还撑得住':n=>`${n}有点渴，但还撑得住`,
+ '光合作用进行中，别打扰':n=>`${n}正在进行光合作用，先别打扰`,
+ '叶脉里好像又饱满了一点':n=>`${n}的叶脉里好像又饱满了一点`,
+ '风吹过，顺便抖了抖灰尘':n=>`${n}被风吹过，顺便抖了抖灰尘`,
+ '土壤的温度刚刚好':n=>`${n}觉得土壤的温度刚刚好`,
+ '你又对着屏幕叹气了，是遇到难题了吗':n=>`${n}听见你又对着屏幕叹气，是遇到难题了吗`,
+ '窗外的车声比昨天多了些':n=>`${n}听着窗外的车声，觉得今天比昨天热闹了些`,
+ '听见你在自言自语，在练习什么吗':n=>`${n}听见你在自言自语，在练习什么吗`,
+ '桌上的水杯好像空了很久了':n=>`${n}发现桌上的水杯好像空了很久了`,
+ '你换了个姿势坐着，看起来没休息好':n=>`${n}看见你换了个姿势坐着，好像没休息好`,
+ '夜里气孔慢慢合上了':n=>`${n}夜里把气孔慢慢合上了`,
+ '根在黑暗里也没闲着':n=>`${n}的根在黑暗里也没闲着`,
+ '叶片上凝了一层薄薄的露水':n=>`${n}的叶片上凝了一层薄薄的露水`,
+ '正安静地进行呼吸作用':n=>`${n}正安静地进行呼吸作用`,
+ '月光洒下来，凉凉的':n=>`${n}晒着月光，凉凉的`,
+ '把今天吸收的养分悄悄存好了':n=>`${n}把今天吸收的养分悄悄存好了`,
+ '夜风一吹，叶尖轻轻晃了晃':n=>`${n}被夜风一吹，叶尖轻轻晃了晃`,
+ '这个点了你还在忙，注意休息':n=>`${n}看你这个点了还在忙，提醒你注意休息`,
+ '隔壁好像传来了电视的声音':n=>`${n}听见隔壁好像传来了电视的声音`,
+ '窗外静悄悄的，只有你的键盘声':n=>`${n}听着窗外静悄悄的，只剩你的键盘声`,
+ '台灯的光把影子拉得好长':n=>`${n}看着台灯的光把影子拉得好长`
+};
+function maybePlantName(text,prob){ const n=getPlantName(); if(n && Math.random()<(prob===undefined?0.3:prob)){ const f=MONO_NAMED[text]; return f?f(n):text; } return text; }
 function getBase(){ try{return parseFloat(localStorage.getItem('poop_plant_base'))||0;}catch(e){return 0;} }
 function setBase(v){ try{localStorage.setItem('poop_plant_base',Math.max(0,Math.round(v*10)/10));}catch(e){} }
 function getLedger(){ try{return JSON.parse(localStorage.getItem('poop_plant_ledger'))||[];}catch(e){return [];} }

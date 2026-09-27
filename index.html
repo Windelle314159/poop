@@ -69,6 +69,10 @@ h1{font-family:'Noto Serif SC',serif;font-size:27px;margin:10px 0 8px;letter-spa
 .moodPills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
 .moodPill{display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:20px;border:1px solid var(--line);font-size:12px;}
 .moodPill .n{font-weight:700;color:var(--accent);}
+.periodToggle{display:flex;gap:8px;margin-bottom:10px;}
+.popt{flex:1;padding:9px 0;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--sub);font-size:13px;}
+.popt.sel{background:var(--accent2);color:#fff;border-color:var(--accent2);}
+.review-close{margin-top:10px;font-size:12.5px;color:var(--sub);font-style:italic;text-align:center;border-top:1px dashed var(--line);padding-top:8px;}
 .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
 .cal-head button{border:none;background:var(--bg);color:var(--text);border-radius:8px;padding:5px 10px;font-size:14px;cursor:pointer;}
 .cal-title{font-weight:700;font-size:14px;}
@@ -124,7 +128,7 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
 .plant-pts{font-size:11px;color:var(--sub);margin-top:3px;opacity:.85;}
 .plant-mono{font-size:12px;color:var(--accent2);font-style:italic;}
 .plant-feels{margin-top:8px;font-size:12px;min-height:16px;}
-.plant-feels #plantKaomoji{font-size:14px;color:var(--accent2);margin-right:4px;}
+.plant-feels #plantKaomoji{font-size:12px;color:var(--accent2);font-style:italic;margin-right:4px;}
 .plant-evt{font-size:10.5px;color:var(--sub);margin-top:6px;padding-top:6px;border-top:1px dashed var(--line);}
 .nutribar{position:relative;height:14px;border-radius:8px;background:var(--line);overflow:hidden;margin-top:6px;}
 .nutribar .nb-base{position:absolute;left:0;top:0;height:100%;background:var(--accent2);transition:width .4s ease;}
@@ -139,7 +143,7 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
 <div class="wrap">
   <div class="header">
     <h1>此事有记</h1>
-    <div class="tag">记录每一次「大」事，顺便养活一株植物</div>
+    <div class="tag">记录每一次「大」事，留下那些本来不会被记住的日子</div>
     <div class="hr-deco"></div>
   </div>
 
@@ -200,9 +204,10 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
       <div class="cal-grid" id="calGrid"></div>
       <div style="font-size:10.5px;color:var(--sub);margin-top:6px">✦ 标记为达成里程碑的日子，点开日期可查看当天详情</div>
     </div>
+    <div class="periodToggle"><button class="popt sel" data-period="month">本月</button><button class="popt" data-period="year">本年</button></div>
+    <div class="card"><h2>月度 / 年度回望</h2><div id="reviewBox"></div></div>
     <div class="card"><h2>形状占比</h2><div class="donut-wrap"><div class="donut" id="typeDonut"></div><div class="legend" id="typeLegend"></div></div></div>
-    <div class="card"><h2>如厕时段分布</h2><div class="donut-wrap"><div class="donut" id="timeDonut"></div><div class="legend" id="timeLegend"></div></div><div class="analysis" id="timeSummary" style="margin-top:8px"></div></div>
-    <div class="card"><h2>状态占比</h2><div class="moodPills" id="moodChips"></div></div>
+    <div class="card"><h2>便便事件分布</h2><div class="donut-wrap"><div class="donut" id="timeDonut"></div><div class="legend" id="timeLegend"></div></div><div class="analysis" id="timeSummary" style="margin-top:8px"></div></div>
   </div>
 
   <div class="page" id="page-mine">
@@ -211,7 +216,7 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
       <div class="cnum" id="companionDays">0</div><div class="clabel">天的共同生活</div>
       <div class="csub" id="companionSub"></div>
     </div>
-    <div class="card"><h2>足迹</h2><div id="badges"></div></div>
+    <div class="card"><h2>脚印</h2><div id="badges"></div></div>
     <div class="card"><h2>里程碑</h2><div class="wallgrid" id="mileWall"></div><div style="font-size:10.5px;color:var(--sub);margin-top:8px">未解锁的里程碑保持神秘，达成后才会揭晓～</div></div>
     <button class="rowbtn" id="btnSettings"><span>⚙ 设置</span><span class="chev">›</span></button>
     <button class="rowbtn" id="btnHistory"><span>📖 历史打卡记录</span><span class="chev">›</span></button>
@@ -242,7 +247,7 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
   <div class="tabs">
     <button class="tab-btn active" data-p="plant">植物</button>
     <button class="tab-btn" data-p="record">施肥</button>
-    <button class="tab-btn" data-p="stats">统计</button>
+    <button class="tab-btn" data-p="stats">足迹</button>
     <button class="tab-btn" data-p="mine">我的</button>
   </div>
 </div>
@@ -523,14 +528,18 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
   };
 });
 
+function updateMineName(){
+  const mn=document.getElementById('mineName'); if(!mn) return;
+  mn.textContent = `${getName()||'你'} 和 ${getPlantName()||'它'}`;
+}
 const plantNameInputEl=document.getElementById('plantNameInput');
 plantNameInputEl.value=getPlantName();
-plantNameInputEl.addEventListener('input',()=>{ setPlantName(plantNameInputEl.value.trim()); const t=document.getElementById('plantTitle'); if(t) t.textContent=plantNameInputEl.value.trim()||'（还没取名字，去"我的"页起一个吧）'; });
+plantNameInputEl.addEventListener('input',()=>{ setPlantName(plantNameInputEl.value.trim()); const t=document.getElementById('plantTitle'); if(t) t.textContent=(getGen()>1?`第${getGen()}代 · `:'')+(plantNameInputEl.value.trim()||'（还没取名字，去"我的"页起一个吧）'); updateMineName(); });
 
 
 const nameInputEl=document.getElementById('nameInput');
 nameInputEl.value=getName();
-nameInputEl.addEventListener('input',()=>{ try{ localStorage.setItem('poop_username',nameInputEl.value.trim()); }catch(e){} const mn=document.getElementById('mineName'); if(mn) mn.textContent=nameInputEl.value.trim()?`${nameInputEl.value.trim()}的修行记录`:'我的修行记录'; });
+nameInputEl.addEventListener('input',()=>{ try{ localStorage.setItem('poop_username',nameInputEl.value.trim()); }catch(e){} updateMineName(); });
 
 document.querySelectorAll('#toneBtns .opt').forEach(b=>{
   b.onclick=()=>{ try{ localStorage.setItem('poop_tone',b.dataset.tone); }catch(e){} document.querySelectorAll('#toneBtns .opt').forEach(o=>o.classList.remove('sel')); b.classList.add('sel'); };
@@ -604,6 +613,50 @@ const TIME_TITLES={
  '深夜':['深夜限定嘉宾','都市不眠代表'],
 };
 const TIME_COLORS={'清晨':'#e0a860','上午':'#c8873a','下午':'#7a9a6b','夜晚':'#5a7ab0','深夜':'#4a3f66'};
+
+let statsPeriod='month';
+function periodRange(period){
+  const now=new Date();
+  if(period==='year') return {start:new Date(now.getFullYear(),0,1).getTime(), label:`${now.getFullYear()}年`};
+  return {start:new Date(now.getFullYear(),now.getMonth(),1).getTime(), label:`${now.getFullYear()}年${now.getMonth()+1}月`};
+}
+function mostCommon(arr){
+  const c={}; arr.forEach(v=>{ if(v) c[v]=(c[v]||0)+1; });
+  let best=null,bc=0; Object.keys(c).forEach(k=>{ if(c[k]>bc){ bc=c[k]; best=k; } });
+  return best;
+}
+function buildReview(pl,label,period){
+  const box=document.getElementById('reviewBox'); if(!box) return;
+  if(!pl.length){ box.innerHTML=`<div class="analysis">${label}还没有记录，等这段时间过去再回来看看～</div>`; return; }
+  const activeDays=new Set(pl.map(e=>new Date(e.time).toDateString())).size;
+  const hourCounts={}; pl.forEach(e=>{ const h=new Date(e.time).getHours(); hourCounts[h]=(hourCounts[h]||0)+1; });
+  let bestHour=0,bc=0; Object.keys(hourCounts).forEach(h=>{ if(hourCounts[h]>bc){ bc=hourCounts[h]; bestHour=parseInt(h); } });
+  const hourTxt=`${String(bestHour).padStart(2,'0')}:00–${String((bestHour+1)%24).padStart(2,'0')}:00`;
+  const commonType=mostCommon(pl.map(e=>e.type));
+  const commonPlace=mostCommon(pl.map(e=>e.place));
+  const commonMood=mostCommon(pl.map(e=>e.mood));
+  const longest=longestStreak(pl);
+  box.innerHTML=`<div class="analysis">${label}，你留下了 <b>${pl.length}</b> 次记录，共有 <b>${activeDays}</b> 个记录日。<br>
+    最常施肥时间：${hourTxt}<br>最常见形态：${commonType?commonType+'型':'—'}${commonPlace?`<br>最常出现地点：${commonPlace}`:''}${commonMood?`<br>最常见心情：${commonMood}`:''}<br>
+    最长连续记录：${longest} 天</div>
+    <div class="analysis" style="margin-top:8px;color:var(--accent2)">这株植物陪你度过了这${period==='year'?'一年':'个月'}。</div>
+    <div class="review-close">${label}，你在这里留下了 ${pl.length} 次记录。</div>`;
+}
+function renderStatsPeriod(){
+  const list=loadData();
+  const {start,label}=periodRange(statsPeriod);
+  const pl=list.filter(e=>e.time>=start&&e.time<=Date.now());
+  buildReview(pl,label,statsPeriod);
+  donut('typeDonut','typeLegend', TYPES.map(t=>({label:t.ic+' '+t.name,count:pl.filter(e=>e.type===t.id).length,color:t.color})));
+  const buckets=['清晨','上午','下午','夜晚','深夜'];
+  const timeData=buckets.map(b=>({label:b,count:pl.filter(e=>timeBucket(new Date(e.time).getHours())===b).length,color:TIME_COLORS[b]}));
+  donut('timeDonut','timeLegend',timeData);
+  const topBucket=timeData.reduce((a,b)=>b.count>a.count?b:a,timeData[0]);
+  const bucketPool=TIME_TITLES[topBucket.label]||[];
+  const bucketTitle=bucketPool.length?pick(bucketPool):topBucket.label;
+  document.getElementById('timeSummary').innerHTML = pl.length ? maybeName(`你最常在 <b>${topBucket.label}</b> 报到，堪称「${bucketTitle}」。`,0.5) : '';
+  document.querySelectorAll('.popt').forEach(b=>b.classList.toggle('sel', b.dataset.period===statsPeriod));
+}
 
 function donut(elId,legendId,data){
   const total=data.reduce((s,d)=>s+d.count,0)||1;
@@ -689,7 +742,7 @@ const TYPE_FERT={
  6:{label:'稀释肥',base:5, note:'糊状偏稀，勉强吸收一点'},
  7:{label:'速溶肥',base:4, note:'水状冲得快，肥力被稀释了'},
 };
-const ABSORB_REMARK={'干货肥':'土壤在努力把它泡软','扎实肥':'正一点点渗下去','标准肥':'吸收得挺稳','黄金肥':'植物馋得根须都在动','湿润肥':'渗透得很快，快好了','稀释肥':'水分先跑了，肥效慢慢补','速溶肥':'大半已经流走，剩下的在慢慢吸收'};
+const ABSORB_REMARK={'干货肥':'土壤在努力把它泡软','扎实肥':'正一点点渗下去','标准肥':'吸收得挺稳','黄金肥':'植物馋','湿润肥':'渗透得很快，快好了','稀释肥':'水分先跑了，肥效慢慢补','速溶肥':'大半已经流走，剩下的在慢慢吸收'};
 const SIZE_MULT={'迷你':0.6,'小':0.8,'中':1,'大':1.3,'超大':1.6};
 const GOOD_MOODS=['畅快淋漓','恍如新生','轻松愉悦'];
 const AFFIRM_MSGS=['这形态该裱起来','教科书级发挥，给自己点个赞','状态在线，继续保持','这是今天最舒服的几分钟吧','稳，绝对的稳'];
@@ -936,7 +989,7 @@ function renderPlant(list){
 }
 function render(){
   const list=loadData().sort((a,b)=>b.time-a.time);
-  const nm=getName(); const mnEl=document.getElementById('mineName'); if(mnEl) mnEl.textContent = nm?`${nm}的修行记录`:'我的修行记录';
+  const nm=getName(); updateMineName();
   const totalXP=list.reduce((s,e)=>s+(e.xp||0),0);
   const {cur,next,pct}=levelInfo(totalXP);
   renderPlant(list);
@@ -960,28 +1013,9 @@ function render(){
 
   const now=Date.now(), weekAgo=now-7*86400000;
   const recent7=list.filter(e=>e.time>=weekAgo);
-  document.getElementById('statWeek').textContent=recent7.length;
-  document.getElementById('statTotal').textContent=list.length;
   const streak=currentStreak(list);
-  document.getElementById('statStreak').textContent=streak;
-  document.getElementById('statLongest').textContent=longestStreak(list);
 
-  donut('typeDonut','typeLegend', TYPES.map(t=>({label:t.ic+' '+t.name,count:list.filter(e=>e.type===t.id).length,color:t.color})));
-  const buckets=['清晨','上午','下午','夜晚','深夜'];
-  const timeData=buckets.map(b=>({label:b,count:list.filter(e=>timeBucket(new Date(e.time).getHours())===b).length,color:TIME_COLORS[b]}));
-  donut('timeDonut','timeLegend',timeData);
-  const topBucket=timeData.reduce((a,b)=>b.count>a.count?b:a,timeData[0]);
-  const bucketPool=TIME_TITLES[topBucket.label]||[];
-  const bucketTitle=bucketPool.length?pick(bucketPool):topBucket.label;
-  document.getElementById('timeSummary').innerHTML = list.length ? maybeName(`你最常在 <b>${topBucket.label}</b> 报到，堪称「${bucketTitle}」。`,0.5) : '';
-
-  const maxMood=Math.max(1,...MOODS.map(m=>list.filter(e=>e.mood===m.id).length));
-  document.getElementById('moodChips').innerHTML=MOODS.map(m=>{
-    const c=list.filter(e=>e.mood===m.id).length;
-    const ratio=maxMood?c/maxMood:0;
-    const bg=`rgba(122,154,107,${(0.05+ratio*0.32).toFixed(2)})`;
-    return `<div class="moodPill" style="background:${bg}"><span>${m.ic}</span><span>${m.id}</span><span class="n">${c}</span></div>`;
-  }).join('');
+  renderStatsPeriod();
 
   renderCalendar(list);
 
@@ -1033,6 +1067,7 @@ function render(){
 render();
 startLingerTimer();
 
+document.querySelectorAll('.popt').forEach(b=>{ b.onclick=()=>{ statsPeriod=b.dataset.period; renderStatsPeriod(); }; });
 document.getElementById('gotoFertBtn').onclick=()=>document.querySelector('[data-p="record"]').click();
 document.getElementById('btnSeed').onclick=()=>{ if(confirm('留种会让当前这株植物的养分归零，重新开始新一代。它的记录会保留在档案馆里，确定吗？')) startNewGeneration(); };
 document.getElementById('btnArchive').onclick=()=>{
@@ -1057,8 +1092,8 @@ document.getElementById('historyClose').onclick=()=>closeOv(document.getElementB
 document.getElementById('historyOv').onclick=(e)=>{ if(e.target.id==='historyOv') closeOv(document.getElementById('historyOv')); };
 
 const I18N={
- zh:{tab_plant:'植物',tab_record:'施肥',tab_stats:'统计',tab_mine:'我的',submit:'施肥',goFert:'🌾 去施肥'},
- en:{tab_plant:'Plant',tab_record:'Log',tab_stats:'Stats',tab_mine:'Me',submit:'Log it',goFert:'🌾 Go log'}
+ zh:{tab_plant:'植物',tab_record:'施肥',tab_stats:'足迹',tab_mine:'我的',submit:'施肥',goFert:'🌾 去施肥'},
+ en:{tab_plant:'Plant',tab_record:'Log',tab_stats:'Trace',tab_mine:'Me',submit:'Log it',goFert:'🌾 Go log'}
 };
 function applyLang(){
   const lang=localStorage.getItem('poop_plant_lang')||'zh';

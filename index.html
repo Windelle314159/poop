@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>此事有记</title>
+<link rel="icon" id="faviconLink" href="">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -109,7 +110,7 @@ details.histbox[open] summary:before{content:'▾ ';}
 .dmbtn{flex:1;min-width:100px;padding:9px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--text);font-size:12.5px;cursor:pointer;text-align:center;}
 .dmbtn.danger{color:var(--danger);background:var(--bg);border-color:var(--danger);opacity:.8;}
 textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--text);padding:8px;font-size:12px;margin-bottom:8px;font-family:inherit;}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-start;justify-content:center;z-index:60;opacity:0;pointer-events:none;transition:opacity .25s;padding:20px;padding-top:14vh;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-start;justify-content:center;z-index:60;opacity:0;pointer-events:none;transition:opacity .25s;padding:20px;padding-top:22vh;}
 .overlay.show{opacity:1;pointer-events:auto;}
 .modal-box{background:var(--card);border-radius:18px;padding:20px;max-width:340px;width:100%;max-height:70vh;overflow:auto;box-shadow:0 14px 40px rgba(0,0,0,.35);}
 .modal-box.special{border:2px solid var(--gold);box-shadow:0 0 0 5px rgba(217,165,59,.22),0 14px 40px rgba(0,0,0,.35);}
@@ -153,7 +154,7 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
       <div class="plant-emoji" id="plantEmoji">🌰</div>
       <div class="plant-stage" id="plantStage">种子期</div>
       <div class="plant-note" id="plantNote">—</div>
-      <div class="plant-feels"><span id="plantKaomoji"></span> <span id="plantMono"></span></div>
+      <div class="plant-feels"><span id="plantKaomoji"></span> <span id="plantMono" class="plant-mono"></span></div>
       <div class="plant-evt" id="plantEvt"></div>
     </div>
     <div class="card">
@@ -198,16 +199,23 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
   </div>
 
   <div class="page" id="page-stats">
-    <div class="card"><h2>便便情报</h2><div class="analysis" id="analysisBox">暂无数据，快去记录吧～</div></div>
+    <div class="card"><h2>便便情报</h2>
+      <div class="stat-row" id="statsOverview">
+        <div class="stat-box"><div class="num" id="ovTotal">0</div><div class="lbl">累计记录</div></div>
+        <div class="stat-box"><div class="num" id="ovDays">0</div><div class="lbl">记录天数</div></div>
+        <div class="stat-box"><div class="num" id="ovTogether">0</div><div class="lbl">共同生活</div></div>
+      </div>
+      <div class="analysis" id="analysisBox">暂无便便记录，快去记录一次吧～</div>
+    </div>
     <div class="card">
       <div class="cal-head"><button id="calPrev">‹</button><div class="cal-title" id="calTitle"></div><button id="calNext">›</button></div>
       <div class="cal-grid" id="calGrid"></div>
-      <div style="font-size:10.5px;color:var(--sub);margin-top:6px">✦ 标记为达成里程碑的日子，点开日期可查看当天详情</div>
+      <div style="font-size:10.5px;color:var(--sub);margin-top:6px">✦ 有便便记录的日子会留下痕迹，点开日期可查看当天详情</div>
     </div>
     <div class="periodToggle"><button class="popt sel" data-period="month">本月</button><button class="popt" data-period="year">本年</button></div>
-    <div class="card"><h2>月度 / 年度回望</h2><div id="reviewBox"></div></div>
+    <div class="card" id="reviewCard"><h2>月度 / 年度回望</h2><div id="reviewBox"></div></div>
     <div class="card"><h2>形状占比</h2><div class="donut-wrap"><div class="donut" id="typeDonut"></div><div class="legend" id="typeLegend"></div></div></div>
-    <div class="card"><h2>便便事件分布</h2><div class="donut-wrap"><div class="donut" id="timeDonut"></div><div class="legend" id="timeLegend"></div></div><div class="analysis" id="timeSummary" style="margin-top:8px"></div></div>
+    <div class="card"><h2>便便什么时候出现？</h2><div class="donut-wrap"><div class="donut" id="timeDonut"></div><div class="legend" id="timeLegend"></div></div><div class="analysis" id="timeSummary" style="margin-top:8px"></div></div>
   </div>
 
   <div class="page" id="page-mine">
@@ -219,7 +227,7 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
     <div class="card"><h2>脚印</h2><div id="badges"></div></div>
     <div class="card"><h2>里程碑</h2><div class="wallgrid" id="mileWall"></div><div style="font-size:10.5px;color:var(--sub);margin-top:8px">未解锁的里程碑保持神秘，达成后才会揭晓～</div></div>
     <button class="rowbtn" id="btnSettings"><span>⚙ 设置</span><span class="chev">›</span></button>
-    <button class="rowbtn" id="btnHistory"><span>📖 历史打卡记录</span><span class="chev">›</span></button>
+    <button class="rowbtn" id="btnHistory"><span>💩 历史便便记录</span><span class="chev">›</span></button>
     <div class="card"><h2>数据管理</h2>
       <div class="dmrow"><button class="dmbtn" id="btnExport">导出</button><button class="dmbtn" id="btnImport">导入</button><button class="dmbtn danger" id="btnReset">清空数据</button></div>
     </div>
@@ -229,17 +237,18 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
     <div class="ttl" style="text-align:center">设置</div>
     <div class="card" style="margin-bottom:10px"><h2>你的称呼</h2><div class="nameRow"><input id="nameInput" type="text" maxlength="8" placeholder="给自己起个昵称吧"></div></div>
     <div class="card" style="margin-bottom:10px"><h2>给植物取名</h2><div class="nameRow"><input id="plantNameInput" type="text" maxlength="8" placeholder="它还没有名字"></div></div>
-    <div class="card" style="margin-bottom:10px"><h2>打卡语气</h2><div class="tonebtns" id="toneBtns">
+    <div class="card" style="margin-bottom:10px"><h2>互动语气</h2><div class="tonebtns" id="toneBtns">
       <div class="opt" data-tone="mild">温和</div><div class="opt" data-tone="normal">日常</div><div class="opt" data-tone="hype">浮夸</div>
     </div></div>
     <div class="card"><h2>Language / 语言</h2><div class="tonebtns" id="langBtns">
       <div class="opt" data-lang="zh">中文</div><div class="opt" data-lang="en">English</div>
     </div></div>
+    <div class="card"><h2>网页图标</h2><div class="nameRow"><input id="faviconInput" type="text" maxlength="4" placeholder="🌱"></div><div style="font-size:10.5px;color:var(--sub);margin-top:6px">填一个喜欢的 emoji，会用作这个页面的图标</div></div>
     <button class="modal-close" id="settingsClose">关闭</button>
   </div></div>
 
   <div class="overlay" id="historyOv"><div class="modal-box" style="text-align:left;max-height:80vh;overflow-y:auto">
-    <div class="ttl" style="text-align:center">历史打卡记录</div>
+    <div class="ttl" style="text-align:center">历史便便记录</div>
     <div id="historyList"><div class="empty">还没有记录</div></div>
     <button class="modal-close" id="historyClose">关闭</button>
   </div></div>
@@ -389,7 +398,7 @@ function levelInfo(totalXP){
   return {cur,next,pct};
 }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-const BASE_MSGS=['嗯哼，稳了，经验+10～','打卡成功！日记又厚了一页，经验+10。','系统检测到一次成功"卸货"，经验+10！','完成，记一笔，经验+10。','漂亮，又一次准时打卡，经验+10。'];
+const BASE_MSGS=['嗯哼，稳了，经验+10～','施肥成功！日记又厚了一页，经验+10。','系统检测到一次成功"卸货"，经验+10！','完成，记一笔，经验+10。','漂亮，又一次准时施肥，经验+10。'];
 const DUR_XP={'<1分钟':4,'1-3分钟':3,'3-8分钟':5,'8-15分钟':8,'15-30分钟':10,'30分钟-1小时':13,'1小时以上':16};
 const DUR_MSGS={
  '<1分钟':['速战速决，堪比闪电，经验+4！','进去出来一套连招，经验+4。'],
@@ -419,7 +428,7 @@ function computeBaseXP(entry,streak){
   if(entry.duration){ const p=DUR_MSGS[entry.duration]; if(p){ msgs.push(toneAdjust(pick(p))); xp+=DUR_XP[entry.duration]||3; } }
   if(entry.mood){ const p=MOOD_MSGS[entry.mood]; if(p){ msgs.push(toneAdjust(pick(p))); xp+=MOOD_XP[entry.mood]||2; } }
   if(entry.type===3||entry.type===4){ msgs.push(toneAdjust(pick(TYPE_MSGS_GOOD))); xp+=5; } else { msgs.push(toneAdjust(pick(TYPE_MSGS_OK))); xp+=3; }
-  if(streak>=2){ const bonus=Math.min(streak*2,20); xp+=bonus; msgs.push(toneAdjust(`连续打卡 ${streak} 天，连击经验+${bonus}。`)); }
+  if(streak>=2){ const bonus=Math.min(streak*2,20); xp+=bonus; msgs.push(toneAdjust(`连续施肥 ${streak} 天，连击经验+${bonus}。`)); }
   return {xp,msgs};
 }
 function computeBadges(list,streak,longest){ return BADGE_DEFS.filter(b=>b.test(list,streak,longest)).map(b=>b.id); }
@@ -620,6 +629,25 @@ function periodRange(period){
   if(period==='year') return {start:new Date(now.getFullYear(),0,1).getTime(), label:`${now.getFullYear()}年`};
   return {start:new Date(now.getFullYear(),now.getMonth(),1).getTime(), label:`${now.getFullYear()}年${now.getMonth()+1}月`};
 }
+function getReviewWindow(){
+  const now=new Date(), d=now.getDate();
+  const lastDay=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const monthActive = d>=lastDay-1 || d===1;
+  const monthIsPrev = d===1;
+  const yearActive = (now.getMonth()===11 && d>=21) || (now.getMonth()===0 && d<=10);
+  const yearIsPrev = now.getMonth()===0 && d<=10;
+  return {monthActive, monthIsPrev, yearActive, yearIsPrev};
+}
+function reviewPeriodRange(period,w){
+  const now=new Date();
+  if(period==='year'){
+    const y = w.yearIsPrev ? now.getFullYear()-1 : now.getFullYear();
+    return {start:new Date(y,0,1).getTime(), end:new Date(y,11,31,23,59,59).getTime(), label:`${y}年`};
+  }
+  let y=now.getFullYear(), m=now.getMonth();
+  if(w.monthIsPrev){ m-=1; if(m<0){ m=11; y-=1; } }
+  return {start:new Date(y,m,1).getTime(), end:new Date(y,m+1,0,23,59,59).getTime(), label:`${y}年${m+1}月`};
+}
 function mostCommon(arr){
   const c={}; arr.forEach(v=>{ if(v) c[v]=(c[v]||0)+1; });
   let best=null,bc=0; Object.keys(c).forEach(k=>{ if(c[k]>bc){ bc=c[k]; best=k; } });
@@ -627,7 +655,7 @@ function mostCommon(arr){
 }
 function buildReview(pl,label,period){
   const box=document.getElementById('reviewBox'); if(!box) return;
-  if(!pl.length){ box.innerHTML=`<div class="analysis">${label}还没有记录，等这段时间过去再回来看看～</div>`; return; }
+  if(!pl.length){ box.innerHTML=`<div class="analysis">${label}还没有便便记录。</div>`; return; }
   const activeDays=new Set(pl.map(e=>new Date(e.time).toDateString())).size;
   const hourCounts={}; pl.forEach(e=>{ const h=new Date(e.time).getHours(); hourCounts[h]=(hourCounts[h]||0)+1; });
   let bestHour=0,bc=0; Object.keys(hourCounts).forEach(h=>{ if(hourCounts[h]>bc){ bc=hourCounts[h]; bestHour=parseInt(h); } });
@@ -636,17 +664,16 @@ function buildReview(pl,label,period){
   const commonPlace=mostCommon(pl.map(e=>e.place));
   const commonMood=mostCommon(pl.map(e=>e.mood));
   const longest=longestStreak(pl);
-  box.innerHTML=`<div class="analysis">${label}，你留下了 <b>${pl.length}</b> 次记录，共有 <b>${activeDays}</b> 个记录日。<br>
+  box.innerHTML=`<div class="analysis">${label}，你留下了 <b>${pl.length}</b> 次便便记录，共有 <b>${activeDays}</b> 个记录日。<br>
     最常施肥时间：${hourTxt}<br>最常见形态：${commonType?commonType+'型':'—'}${commonPlace?`<br>最常出现地点：${commonPlace}`:''}${commonMood?`<br>最常见心情：${commonMood}`:''}<br>
     最长连续记录：${longest} 天</div>
-    <div class="analysis" style="margin-top:8px;color:var(--accent2)">这株植物陪你度过了这${period==='year'?'一年':'个月'}。</div>
-    <div class="review-close">${label}，你在这里留下了 ${pl.length} 次记录。</div>`;
+    <div class="analysis" style="margin-top:8px;color:var(--accent2)">这株植物已经陪你走过了这${period==='year'?'一年':'个月'}。</div>
+    <div class="review-close">${label}，你在这里留下了 ${pl.length} 次便便记录。</div>`;
 }
 function renderStatsPeriod(){
   const list=loadData();
   const {start,label}=periodRange(statsPeriod);
   const pl=list.filter(e=>e.time>=start&&e.time<=Date.now());
-  buildReview(pl,label,statsPeriod);
   donut('typeDonut','typeLegend', TYPES.map(t=>({label:t.ic+' '+t.name,count:pl.filter(e=>e.type===t.id).length,color:t.color})));
   const buckets=['清晨','上午','下午','夜晚','深夜'];
   const timeData=buckets.map(b=>({label:b,count:pl.filter(e=>timeBucket(new Date(e.time).getHours())===b).length,color:TIME_COLORS[b]}));
@@ -656,6 +683,19 @@ function renderStatsPeriod(){
   const bucketTitle=bucketPool.length?pick(bucketPool):topBucket.label;
   document.getElementById('timeSummary').innerHTML = pl.length ? maybeName(`你最常在 <b>${topBucket.label}</b> 报到，堪称「${bucketTitle}」。`,0.5) : '';
   document.querySelectorAll('.popt').forEach(b=>b.classList.toggle('sel', b.dataset.period===statsPeriod));
+
+  const w=getReviewWindow();
+  const card=document.getElementById('reviewCard');
+  if(!w.monthActive && !w.yearActive){ if(card) card.style.display='none'; }
+  else{
+    if(card) card.style.display='block';
+    let rPeriod=statsPeriod;
+    if(rPeriod==='month' && !w.monthActive) rPeriod='year';
+    if(rPeriod==='year' && !w.yearActive) rPeriod='month';
+    const rr=reviewPeriodRange(rPeriod,w);
+    const rpl=list.filter(e=>e.time>=rr.start && e.time<=Math.min(rr.end,Date.now()));
+    buildReview(rpl,rr.label,rPeriod);
+  }
 }
 
 function donut(elId,legendId,data){
@@ -824,6 +864,13 @@ function getGenStart(){
   return g;
 }
 function getArchive(){ try{return JSON.parse(localStorage.getItem('poop_plant_archive'))||[];}catch(e){return [];} }
+const LEGACY_ITEMS=['一颗饱满的种子','半透明的果实','一片风干的落叶','一段带着芽点的枝条','一撮带着草木香的土','一缕卷曲的须根'];
+function getStageLog(){ try{return JSON.parse(localStorage.getItem('poop_plant_stageLog'))||{};}catch(e){return {};} }
+function setStageLog(o){ try{localStorage.setItem('poop_plant_stageLog',JSON.stringify(o));}catch(e){} }
+function logStageIfNew(stage){
+  const log=getStageLog();
+  if(!log[stage.label]){ log[stage.label]=Date.now(); setStageLog(log); }
+}
 function startNewGeneration(){
   const genStart=getGenStart();
   const genEntries=loadData().filter(e=>e.time>=genStart);
@@ -835,15 +882,17 @@ function startNewGeneration(){
   const gen=getGen();
   const days=Math.max(1,Math.floor((Date.now()-genStart)/86400000)+1);
   const archive=getArchive();
-  archive.push({gen, name:getPlantName()||`第${gen}代`, start:genStart, end:Date.now(), total:genEntries.length, domLabel, days});
+  const legacyItem=pick(LEGACY_ITEMS);
+  const timeline=getStageLog();
+  archive.push({gen, name:getPlantName()||`第${gen}代`, start:genStart, end:Date.now(), total:genEntries.length, domLabel, days, legacyItem, timeline});
   localStorage.setItem('poop_plant_archive', JSON.stringify(archive));
   if(domType) localStorage.setItem('poop_plant_trait', JSON.stringify({type:domType, label:domLabel, bonusPct:0.15}));
-  setBase(0); setLedger([]);
+  setBase(0); setLedger([]); setStageLog({});
   localStorage.setItem('poop_plant_gen', gen+1);
   localStorage.setItem('poop_plant_genStart', Date.now());
   localStorage.removeItem('poop_plant_lastEvtMsg');
   localStorage.removeItem('poop_plant_nextEvtAt');
-  showToast('🌱 新的生命开始了', [`第${gen}代完整走完了一生：共施肥 ${genEntries.length} 次，相伴 ${days} 天`, domType?`新一代继承了偏好：更爱${domLabel}`:'新一代是一张白纸，从头开始'], true, '好的，继续');
+  showToast('🌱 新的生命开始了', [`第${gen}代完整走完了一生：共施肥 ${genEntries.length} 次，相伴 ${days} 天`, domType?`新一代继承了偏好：更爱${domLabel}`:'新一代是一张白纸，从头开始', `它留下了一份遗产：${legacyItem}`], true, '好的，继续');
   render();
 }
 function weightedPick(list){
@@ -942,6 +991,7 @@ function renderPlant(list){
   const {base,pendingAbsorbed,pendingTotal,latestLabel}=processLedger();
   const pts=Math.round((base+pendingAbsorbed)*10)/10;
   const stage=plantStageForPoints(pts);
+  logStageIfNew(stage);
   document.getElementById('plantEmoji').textContent=stage.emoji;
   document.getElementById('plantStage').textContent=stage.label;
   document.getElementById('plantKaomoji').textContent=(maybeRefreshKaomoji(list), currentKaomoji);
@@ -961,10 +1011,10 @@ function renderPlant(list){
   if(nbBase){ nbBase.style.width=basePct+'%'; }
   if(nbPending){ nbPending.style.left=basePct+'%'; nbPending.style.width=pendPctW+'%'; }
   let ptsTxt = next ? `养分 ${pts} · 还差 ${Math.max(0,Math.round((next.min-pts)*10)/10)} 到「${next.label}」` : `养分 ${pts} · 已是终极形态`;
-  if(pendingTotal>0){ ptsTxt += ` · 另有 ${Math.round(pendingTotal)} 正在吸收中，${ABSORB_REMARK[latestLabel]||'正在慢慢吸收'}`; }
+  if(pendingTotal>0){ ptsTxt += ` · 另有 ${Math.round(pendingTotal)} 正在吸收中`; }
   document.getElementById('plantPts').textContent=ptsTxt;
   const emojiEl=document.getElementById('plantEmoji'); const noteEl=document.getElementById('plantNote');
-  if(list.length===0){ noteEl.textContent='还没施过肥，快去第一次打卡吧'; emojiEl.classList.remove('wilt'); }
+  if(list.length===0){ noteEl.textContent='还没施过肥，快去记录第一次便便吧'; emojiEl.classList.remove('wilt'); }
   else{
     const last=Math.max(...list.map(e=>e.time));
     const gapDays=Math.floor((Date.now()-last)/86400000);
@@ -999,7 +1049,7 @@ function render(){
   const csEl=document.getElementById('companionSub'); if(csEl) csEl.textContent=list.length?`共施肥 ${list.length} 次 · 当前连续 ${currentStreak(list)} 天`:'还没有第一次记录';
 
   const hEl=document.getElementById('historyList');
-  if(list.length===0){ hEl.innerHTML='<div class="empty">还没有记录，快去打卡吧</div>'; }
+  if(list.length===0){ hEl.innerHTML='<div class="empty">还没有记录，快去记录一次吧</div>'; }
   else{
     hEl.innerHTML=list.map((e,i)=>{
       const t=TYPES.find(t=>t.id===e.type);
@@ -1027,7 +1077,14 @@ function render(){
   }).join('');
 
   const analysisBox=document.getElementById('analysisBox');
-  if(list.length===0){ analysisBox.innerHTML='暂无数据，快去打卡吧～'; }
+  const ovT=document.getElementById('ovTotal'), ovD=document.getElementById('ovDays'), ovG=document.getElementById('ovTogether');
+  if(ovT){
+    ovT.textContent=list.length;
+    ovD.textContent=new Set(list.map(e=>new Date(e.time).toDateString())).size;
+    const ft=list.length?Math.min(...list.map(e=>e.time)):Date.now();
+    ovG.textContent=list.length?Math.max(1,Math.floor((Date.now()-ft)/86400000)+1):0;
+  }
+  if(list.length===0){ analysisBox.innerHTML='暂无便便记录，快去记录一次吧～'; }
   else{
     const today=new Date();
     const todays=list.filter(e=>new Date(e.time).toDateString()===today.toDateString());
@@ -1062,8 +1119,18 @@ function render(){
   const badgeEl=document.getElementById('badges');
   const badgeIds=computeBadges(list,streak,longestStreak(list));
   const shown=BADGE_DEFS.filter(b=>badgeIds.includes(b.id)).map(b=>`<span class="badge">${b.ic} ${b.label}</span>`);
-  badgeEl.innerHTML = shown.length ? shown.join('') : '<span style="color:var(--sub);font-size:13px">继续打卡解锁成就～</span>';
+  badgeEl.innerHTML = shown.length ? shown.join('') : '<span style="color:var(--sub);font-size:13px">继续记录便便，留下更多脚印～</span>';
 }
+function applyFavicon(){
+  const emo=localStorage.getItem('poop_plant_favicon')||'🌱';
+  const svg=`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>${emo}</text></svg>`;
+  const link=document.getElementById('faviconLink');
+  if(link) link.href='data:image/svg+xml,'+encodeURIComponent(svg);
+}
+const faviconInputEl=document.getElementById('faviconInput');
+faviconInputEl.value=localStorage.getItem('poop_plant_favicon')||'🌱';
+faviconInputEl.addEventListener('input',()=>{ const v=faviconInputEl.value.trim()||'🌱'; try{ localStorage.setItem('poop_plant_favicon',v); }catch(e){} applyFavicon(); });
+applyFavicon();
 render();
 startLingerTimer();
 
@@ -1073,7 +1140,10 @@ document.getElementById('btnSeed').onclick=()=>{ if(confirm('留种会让当前�
 document.getElementById('btnArchive').onclick=()=>{
   const arc=getArchive();
   const el=document.getElementById('archiveList');
-  el.innerHTML = arc.length ? arc.slice().reverse().map(a=>`<div class="card" style="margin-bottom:10px"><b>第${a.gen}代 · ${a.name}</b><div class="analysis" style="margin-top:6px">${fmtDate(a.start).split(' ')[0]} ～ ${fmtDate(a.end).split(' ')[0]}<br>共施肥 ${a.total} 次 · 相伴 ${a.days} 天${a.domLabel?`<br>最常见的肥料：${a.domLabel}`:''}</div></div>`).join('')
+  el.innerHTML = arc.length ? arc.slice().reverse().map(a=>{
+    const tl=a.timeline?Object.keys(a.timeline).sort((x,y)=>a.timeline[x]-a.timeline[y]).map(k=>`<div style="font-size:11px;color:var(--sub);margin-top:2px">${k} · ${fmtDate(a.timeline[k]).split(' ')[0]}</div>`).join(''):'';
+    return `<div class="card" style="margin-bottom:10px"><b>第${a.gen}代 · ${a.name}</b><div class="analysis" style="margin-top:6px">${fmtDate(a.start).split(' ')[0]} ～ ${fmtDate(a.end).split(' ')[0]}<br>共施肥 ${a.total} 次 · 相伴 ${a.days} 天${a.domLabel?`<br>最常见的肥料：${a.domLabel}`:''}${a.legacyItem?`<br>留下的遗产：${a.legacyItem}`:''}</div>${tl?`<div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)">${tl}</div>`:''}</div>`;
+  }).join('')
     : `<div class="empty">现在是第${getGen()}代，还没有一代完整走完</div>`;
   openOv(document.getElementById('archiveOv'));
 };

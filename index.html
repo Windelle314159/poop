@@ -291,6 +291,16 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
     <button class="modal-close" id="overviewClose">关闭</button>
   </div></div>
 
+  <div class="overlay" id="achieveDetailOv"><div class="modal-box" style="text-align:left">
+    <div class="ttl" id="adTitle"></div>
+    <div class="analysis" id="adDate" style="margin-top:8px"></div>
+    <div class="ovh" style="margin-top:12px">当天发生的事</div>
+    <div class="analysis" id="adEvents"></div>
+    <div class="ovh" style="margin-top:12px">小注释</div>
+    <div class="analysis" id="adNote" style="font-style:italic;color:var(--accent2)"></div>
+    <button class="modal-close" id="adClose">关闭</button>
+  </div></div>
+
   <div class="tabs">
     <button class="tab-btn active" data-p="plant">植物</button>
     <button class="tab-btn" data-p="record">施肥</button>
@@ -304,6 +314,116 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
 <div class="overlay" id="dayOv"><div class="modal-box"><div class="ttl" id="dayTtl"></div><div class="msg" id="dayMsg"></div><button class="modal-close" id="dayClose">关闭</button></div></div>
 
 <script>
+/* ===== i18n (Chinese source strings -> English) ===== */
+let LANG=(function(){ try{ return localStorage.getItem('poop_plant_lang')==='en'?'en':'zh'; }catch(e){ return 'zh'; } })();
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const CJK=/[\u4e00-\u9fff]/;
+const EN={"🌧️ 夜里下了场雨，土壤喝饱了水，养分 +6": "🌧️ It rained overnight and the soil drank its fill. Nutrients +6", "🌧️ 一场急雨路过，叶片上挂满水珠，养分 +5": "🌧️ A sudden shower passed, leaving droplets on every leaf. Nutrients +5", "☀️ 太久没下雨，叶尖有点发卷，养分 -3": "☀️ No rain for too long — the leaf tips are curling. Nutrients -3", "☀️ 连着大晴天，土壤有点发干，养分 -2": "☀️ Days of clear sun have dried the soil out a bit. Nutrients -2", "🐞 一只瓢虫路过，顺手松了松土，养分 +3": "🐞 A ladybug passed by and loosened the soil on the way. Nutrients +3", "🐦 一只麻雀落下来歇脚，啄走了几只害虫，养分 +4": "🐦 A sparrow stopped to rest and pecked off a few pests. Nutrients +4", "🦋 一只粉蝶在叶子上待了很久才飞走，养分 +2": "🦋 A cabbage white butterfly lingered on a leaf for a long while. Nutrients +2", "🐛 被一只洋辣子啃了一口叶子，有点疼，养分 -3": "🐛 A stinging caterpillar took a bite of a leaf. Ouch. Nutrients -3", "🐜 一队蚂蚁搬家路过，顺走了点养分，养分 -2": "🐜 A column of ants moving house helped themselves to some nutrients. Nutrients -2", "💨 一阵大风吹歪了枝条，养分 -4": "💨 A strong gust bent a branch. Nutrients -4", "🌾 飘来了一粒蒲公英种子，卡在叶片间，痒痒的": "🌾 A dandelion seed drifted in and got stuck between the leaves. Tickles!", "🛍️ 不知哪来的塑料袋缠上了枝干，有点不透气，养分 -2": "🛍️ A plastic bag from who-knows-where wrapped around a branch. Hard to breathe. Nutrients -2", "🐦 一只喜鹊落在旁边看了很久，什么也没做就飞走了": "🐦 A magpie perched nearby, watched for ages, then flew off without doing a thing", "🐌 一只蜗牛慢悠悠爬过，留下一道亮晶晶的痕迹，养分 +2": "🐌 A snail crawled by slowly, leaving a shiny trail. Nutrients +2", "🍂 隔壁的一片梧桐叶飘过来，正好盖在了旁边": "🍂 A plane-tree leaf from next door drifted over and landed right beside it", "🧑 路过的人随手给浇了口矿泉水，养分 +3": "🧑 A passer-by casually poured some bottled water on it. Nutrients +3", "🐿️ 一只松鼠好奇地扒了扒盆土，养分 -1": "🐿️ A squirrel curiously dug around in the pot. Nutrients -1", "🕊️ 一根羽毛不知从哪飘落，轻轻搭在叶尖上": "🕊️ A feather floated down from somewhere and rested on a leaf tip", "阳光晒在叶片上，暖暖的": "Sunlight on my leaves, nice and warm", "{n}的根须在土里悄悄往下探了探": "{n} felt its roots creep a little deeper into the soil", "有点渴，但还撑得住": "A bit thirsty, but holding on", "光合作用进行中，别打扰": "Photosynthesizing — do not disturb", "{n}觉得叶脉里好像又饱满了一点": "{n} feels like its leaf veins got a little plumper", "风吹过，顺便抖了抖灰尘": "A breeze passed by — shook off some dust while I was at it", "土壤的温度刚刚好": "The soil is just the right temperature", "{n}看见你又对着屏幕叹气了，是遇到难题了吗": "{n} saw you sighing at the screen again — hit a tough problem?", "{n}听见窗外的车声比昨天多了些": "{n} noticed more cars outside the window than yesterday", "{n}听见你在自言自语，在练习什么吗": "{n} heard you muttering to yourself — practicing something?", "{n}发现桌上的水杯好像空了很久了": "{n} noticed your water glass has been empty for a while", "{n}看你换了个姿势坐着，是不是没休息好": "{n} watched you shift in your seat — didn’t sleep well?", "夜里气孔慢慢合上了": "My stomata are slowly closing for the night", "{n}的根在黑暗里也没闲着": "{n} keeps its roots busy even in the dark", "叶片上凝了一层薄薄的露水": "A thin layer of dew has formed on my leaves", "正安静地进行呼吸作用": "Quietly respiring", "月光洒下来，凉凉的": "Moonlight falls, cool and calm", "把今天吸收的养分悄悄存好了": "Quietly stored away today’s nutrients", "夜风一吹，叶尖轻轻晃了晃": "A night breeze — my leaf tips swayed gently", "{n}看你这个点了还在忙，注意休息": "{n} sees you’re still busy at this hour — get some rest", "{n}好像听见隔壁传来电视的声音": "{n} thinks it can hear a TV from next door", "窗外静悄悄的，{n}只听得见你的键盘声": "It’s quiet outside — all {n} can hear is your keyboard", "{n}看着台灯的光把影子拉得好长": "{n} watches the desk lamp stretch its shadow long", "{n}感受到了你的目光，晒了会儿太阳": "{n} felt your gaze and soaked up a bit of sun", "被看着的感觉，{n}好像长得更起劲了": "Being watched, {n} seems to grow with more gusto", "夜里被你陪着，{n}吸了点夜间的二氧化碳": "Kept company by you tonight, {n} breathed in some night-time CO₂", "安静地被注视着，也挺好": "Being quietly watched is nice too", "这形态该裱起来": "This shape deserves framing", "教科书级发挥，给自己点个赞": "Textbook performance — give yourself a thumbs-up", "状态在线，继续保持": "In great form — keep it up", "这是今天最舒服的几分钟吧": "Probably the most comfortable minutes of your day", "稳，绝对的稳": "Steady. Absolutely steady", "辛苦了，抱一个": "Well done — here’s a hug", "难受也记下来了，这份坚持不容易": "Even the rough ones got recorded — that persistence isn’t easy", "不舒服的话记得多喝点水": "If you feel off, remember to drink more water", "这局是硬仗，你打赢了": "That was a tough one, and you won", "难受归难受，至少过去了": "Rough as it was, at least it’s over", "粪堆已经堆到盆沿了，今天先别加了，有点臭": "The pile has reached the rim of the pot — hold off for today, it’s getting smelly", "土壤已经吃撑了，明天再喂吧": "The soil is stuffed — feed it again tomorrow", "再施肥植物要被熏晕了，先歇会儿": "Any more and the plant will be knocked out by the smell — take a break", "肥料堆成小山了，暂时消化不动了": "The fertilizer is piled up like a hill — it can’t digest any more for now", "今天的份额已经满了，克制一下～": "Today’s share is full — a little restraint~", "吃饱啦": "Full!", "很满足": "So satisfied", "谢谢投喂": "Thanks for the meal", "消化中，先这样": "Digesting… that’s all for now", "收到，谢谢": "Got it, thanks", "这顿不错": "Nice meal", "知道啦": "Got it", "一颗饱满的种子": "A plump seed", "半透明的果实": "A translucent fruit", "一片风干的落叶": "A wind-dried fallen leaf", "一段带着芽点的枝条": "A twig with a budding node", "一撮带着草木香的土": "A pinch of earth that smells of green things", "一缕卷曲的须根": "A curled little rootlet", "干货肥": "Dry fertilizer", "羊球状偏干，肥效温和": "Dry pellets, gentle effect", "扎实肥": "Solid fertilizer", "偏硬但扎实，稳步吸收": "Firm but solid, absorbed steadily", "标准肥": "Standard fertilizer", "营养均衡，正常发挥": "Balanced nutrition, working as it should", "黄金肥": "Golden fertilizer", "完美形态！植物馋这口很久了": "Perfect form! The plant has craved this for ages", "湿润肥": "Moist fertilizer", "偏软易吸收，肥效不错": "Soft and easy to absorb — nicely effective", "稀释肥": "Diluted fertilizer", "糊状偏稀，勉强吸收一点": "A bit runny — only barely absorbed", "速溶肥": "Instant fertilizer", "水状冲得快，肥力被稀释了": "Watery and washed away — the strength got diluted", "第一片真叶": "First True Leaf", "{name}长出了第一片像样的叶子，都是你的功劳。": "{name} grew its first proper leaf — all thanks to you.", "扎根期": "Putting Down Roots", "根须稳稳扎进土里了，{name}开始有点脾气了。": "Its roots are firmly in the soil, and {name} is starting to show some attitude.", "舒展": "Stretching Out", "{name}第一次把叶子完全展开，像是伸了个懒腰。": "{name} fully unfurled its leaves for the first time, like a good long stretch.", "一起满月": "A Full Moon Together", "陪{name}这么久，它已经记住你的味道了。": "After all this time with {name}, it remembers your scent.", "百日之约": "A Hundred-Day Promise", "这份坚持，{name}都看在眼里。": "This persistence — {name} sees it all.", "枝叶扶疏": "Lush Branches", "{name}的影子已经遮住小半盆土了。": "{name}’s shadow now covers half the pot.", "一岁啦": "One Year Old!", "陪{name}走到这里，它想跟你说声谢谢。": "Having come this far with {name}, it wants to say thank you.", "并肩成林": "Side by Side", "{name}这一路长成的样子，全靠你没有放弃。": "How {name} has grown is all thanks to you never giving up.", "{name}爱你": "{name} loves you", "这么久的坚持，{name}把这句话悄悄种进了叶脉里。": "After all this time, {name} quietly planted those words into its leaf veins.", "岁月共生": "Growing Old Together", "和{name}一起走过这么久，早就分不清谁在陪谁了。": "After walking this long with {name}, it’s hard to tell who’s keeping whom company.", "与你共生": "Life Together", "{name}早就不只是一株植物，是你日子里的一部分。": "{name} is no longer just a plant — it’s part of your days.", "拉屎大王": "King of Poop", "一万次，当之无愧的拉屎大王，{name}向你鞠躬。": "Ten thousand times — a truly deserving King of Poop. {name} bows to you.", "第一次发芽": "First Sprout", "植物发芽了，是你亲手养出来的。": "It sprouted — and you raised it yourself.", "长出新叶": "New Leaves", "长叶了，肥料没白施。": "Leaves at last — the fertilizer wasn’t wasted.", "第一次开花": "First Bloom", "开花了，值得凑近闻一下。": "It bloomed. Worth leaning in for a sniff.", "长成大树": "Grown Tree", "长成了一棵树，堪称传奇级坚持。": "It grew into a tree — legendary persistence.", "有了名字": "Given a Name", "植物终于有名字了，不再是\"那个东西\"。": "Your plant finally has a name and is no longer “that thing”.", "完整的一生": "A Full Life", "一株植物完整地陪你走完了一生。": "A whole plant lived out its life alongside you.", "传承三代": "Three Generations", "植物换了一轮又一轮，陪伴没有换。": "The plants keep changing; the companionship doesn’t.", "第一次记录": "First record", "万事开头难，你已经迈出第一步。": "The first step is the hardest — and you’ve taken it.", "慢慢养成习惯": "Getting Into It", "两位数了，稳步前进中。": "Double digits — steady progress.", "并肩五十次": "Fifty Together", "半百纪录，经验丰富了。": "Half a hundred — you’re getting experienced.", "连续三天": "Three in a Row", "三天不断，习惯正在养成。": "Three days straight — a habit is forming.", "陪伴一周": "A Week Together", "一周无间断，规律生活典范。": "A full week without a break — a model of regularity.", "陪伴满月": "A Full Month Together", "整整一个月，值得为自己鼓掌。": "A whole month — give yourself a round of applause.", "状态在线": "In Top Form", "五次完美形态，堪称典范。": "Five perfect shapes — a true role model.", "扛过了难受的日子": "Got Through the Rough Days", "再难的时刻你都挺过来了。": "You made it through even the hardest moments.", "羊球状": "Pellets", "香肠块状": "Lumpy sausage", "带裂纹": "Cracked sausage", "光滑香肠": "Smooth sausage", "软块状": "Soft blobs", "糊状": "Mushy", "水状": "Watery", "硬块,便秘": "Hard lumps, constipation", "偏硬": "Firm", "正常": "Normal", "完美": "Perfect", "偏软": "Soft", "较稀": "Loose", "腹泻": "Diarrhea", "棕色": "Brown", "黄色": "Yellow", "深褐": "Dark brown", "绿色": "Green", "黑色": "Black", "偏红": "Reddish", "橙色": "Orange", "灰白": "Pale gray", "迷你": "Mini", "小": "Small", "中": "Medium", "大": "Large", "超大": "Huge", "无味": "Odorless", "若隐若现": "Faint", "有味道": "Noticeable", "浓烈": "Strong", "爆炸级": "Explosive", "生化警报": "Biohazard", "轻松愉悦": "Relaxed & happy", "畅快淋漓": "Exhilarating", "平平无奇": "Uneventful", "有点费力": "A bit of effort", "非常痛苦": "Very painful", "意犹未尽": "Not quite done", "如释重负": "Relieved", "灵魂出窍": "Out-of-body", "恍如新生": "Reborn", "<1分钟": "<1 min", "1-3分钟": "1–3 min", "3-8分钟": "3–8 min", "8-15分钟": "8–15 min", "15-30分钟": "15–30 min", "30分钟-1小时": "30 min–1 hr", "1小时以上": "Over 1 hr", "家里": "Home", "公司": "Office", "学校": "School", "宿舍": "Dorm", "商场厕所": "Mall restroom", "公共厕所": "Public restroom", "野外": "Outdoors", "高铁": "High-speed train", "飞机": "Plane", "朋友家": "Friend’s place", "酒店": "Hotel", "日": "Sun", "一": "Mon", "二": "Tue", "三": "Wed", "四": "Thu", "五": "Fri", "六": "Sat", "种子期": "Seed Stage", "发芽": "Sprout Stage", "抽枝": "Branching Stage", "长叶": "Leaf Stage", "开花": "Bloom Stage", "结果": "Fruit Stage", "参天大树": "Towering Tree", "此事有记": "Noted", "记录每一次「大」事，留下那些本来不会被记住的日子": "Log every “big” moment, and keep the days that would otherwise be forgotten", "植物": "Plant", "施肥": "Fertilize", "足迹": "Trail", "我的": "Me", "已吸收": "Absorbed", "吸收中": "Absorbing", "待补充": "To go", "本周施肥": "This week", "连续天数": "Day streak", "🌰 它已经长成熟了": "🌰 It has fully matured", "可以留种，开启它的下一段生命——新一代会继承这一代的一点偏好。": "Collect its seeds to begin its next life — the next generation inherits a little of this one’s taste.", "留种，开启下一段": "Collect seeds & start anew", "🌾 去施肥": "🌾 Go fertilize", "📖 植物档案馆": "📖 Plant Archive", "植物档案馆": "Plant Archive", "还没有留种记录": "No seed records yet", "关闭": "Close", "形状和状态选一下就能施肥，其余展开后再填～": "Pick a shape and a mood and you can fertilize — fill in the rest if you like~", "形状（布里斯托分类）": "Shape (Bristol scale)", "当时状态": "How it felt", "展开更多细节": "Show more details", "颜色": "Color", "分量": "Amount", "气味": "Smell", "用时": "Time spent", "地点": "Place", "发生时间": "When", "✎ 给今天留句话？": "✎ Leave a line for today?", "便便情报": "Poop Report", "暂无便便记录，快去记录一次吧～": "No records yet — go log one!", "✦ 有便便记录的日子会留下痕迹，点开日期可查看当天详情": "✦ Days with records leave a mark — tap a date for details", "本月": "This month", "本年": "This year", "月度 / 年度回望": "Monthly / Yearly Look-back", "🔍 看看留下了什么": "🔍 See what you’ve left behind", "天的共同生活": "days living together", "脚印": "Footprints", "里程碑": "Milestones", "未解锁的里程碑保持神秘，达成后才会揭晓～": "Locked milestones stay a mystery until you reach them~", "⚙ 设置": "⚙ Settings", "💩 历史便便记录": "💩 Poop History", "📝 留下的话": "📝 Lines I Left", "数据管理": "Data", "导出": "Export", "导入": "Import", "清空数据": "Clear data", "设置": "Settings", "你的称呼": "Your name", "给自己起个昵称吧": "Give yourself a nickname", "给植物取名": "Name your plant", "它还没有名字": "No name yet", "互动语气": "Tone", "温和": "Gentle", "日常": "Casual", "浮夸": "Over the top", "网页图标": "Page icon", "填一个 emoji 作为网页图标，留空则使用默认图标": "Enter an emoji to use as the page icon; leave blank for the default", "历史便便记录": "Poop History", "还没有记录": "No records yet", "留下的话": "Lines I Left", "给今天留句话": "Leave a line for today", "今天想说点什么…": "What would you like to say today…", "取消": "Cancel", "保存": "Save", "看看留下了什么": "See what you’ve left behind", "数据": "Data", "编辑": "Edit", "删除": "Delete", "还没有留下过话。记录便便时，点下方的「给今天留句话？」就会出现在这里": "Nothing here yet. Tap “Leave a line for today?” under the Fertilize button and it will show up here.", "还没有便便记录，先去记录一次吧": "No records yet — go log one first", "达成日期": "Date achieved", "当天发生的事": "What happened that day", "小注释": "A little note", "这天没有便便记录": "No poop records on that day", "这一天还没有记录。": "Nothing recorded on this day.", "记录概览": "Overview", "累计便便次数": "Total records", "记录天数": "Days recorded", "最近一次记录": "Latest record", "我的习惯": "My habits", "最常见形状": "Most common shape", "最常出现时间": "Most common time", "最常出现地点": "Most common place", "最常见心情": "Most common mood", "最长连续记录": "Longest streak", "最长空档": "Longest gap", "导出数据": "Export data", "导出为文件": "Export to file", "复制到剪贴板": "Copy to clipboard", "导入数据": "Import data", "选择文件导入": "Choose a file to import", "或将导出的内容粘贴到这里": "Or paste the exported content here", "粘贴内容导入": "Import pasted content", "已复制到剪贴板": "Copied to clipboard", "复制失败，可尝试\"导出为文件\"": "Copy failed — try “Export to file”", "导入成功！": "Import successful!", "导入失败，请检查内容格式是否正确": "Import failed — please check the format", "确定要清空所有本地数据吗？此操作不可恢复。": "Clear all local data? This cannot be undone.", "删除这句话？": "Delete this line?", "至少选一下形状吧": "Please pick a shape at least", "留种会让当前这株植物的养分归零，重新开始新一代。它的记录会保留在档案馆里，确定吗？": "Collecting seeds will reset this plant’s nutrients and start a new generation. Its record stays in the archive. Continue?", "🌾 施肥完成": "🌾 Fertilized!", "好的，继续": "OK, continue", "🌱 新的生命开始了": "🌱 A new life begins", "🌱 这几天的植物纪事": "🌱 Plant news these past days", "🌱 植物纪事": "🌱 Plant news", "✦ 解锁里程碑": "✦ Milestone unlocked", "🏅 解锁新足迹": "🏅 New footprint unlocked", "已经满了 💩": "Full already 💩", "+1 呼吸感应": "+1 felt your presence", "新一代是一张白纸，从头开始": "The new generation is a blank slate — starting fresh", "天生偏爱这味": "a natural favorite", "还没施过肥，快去记录第一次便便吧": "No fertilizer yet — go log your first poop!", "今天已经施肥，长势喜人": "Fertilized today — growing nicely", "昨天施过肥，还算滋润": "Fertilized yesterday — still fairly well-fed", "还没发生过随机事件": "No random events yet", "还没有第一次记录": "No first record yet", "（还没取名字，去\"我的\"页起一个吧）": "(No name yet — give it one on the “Me” page)", "刚刚": "just now", "最近7天<b>还没有记录</b>，记得留意身体信号。": "Nothing logged in the last 7 days — keep an eye on your body’s signals.", "最近<b>偏硬型</b>占比较高，可能轻度便秘，建议增加水分与蔬果摄入。": "Lately <b>firm types</b> make up a large share — possibly mild constipation. Try more water, fruit and vegetables.", "最近<b>偏稀型</b>占比较高，注意饮食卫生，持续请留意身体状况。": "Lately <b>loose types</b> make up a large share — mind food hygiene, and keep an eye on how you feel if it continues.", "大部分记录都在<b>理想形态</b>，消化系统状态不错。": "Most records are in the <b>ideal range</b> — your digestion looks good.", "最近\"费力/痛苦\"记录较多，注意别太紧张，放松心态更顺畅。": "Lately there are quite a few “effortful / painful” records — try not to tense up; relaxing helps.", "继续记录便便，留下更多脚印～": "Keep logging and leave more footprints~", "今天还没有记录，你的日均是": "You haven't logged anything today. Your daily average is", "次。": "per day.", "今天已记录": "You've logged", "次，高于日均": "times today, above your average of", "次，如伴随不适建议关注饮食。": "times. If you feel unwell, keep an eye on your diet.", "次，日均为": "times today; your average is", "次，状态正常。": "times — looking normal.", "最近7天": "In the last 7 days ", "，记得留意身体信号。": ", remember to watch your body's signals.", "最近7天只记录了": "Only logged ", "，频率偏低，注意多喝水、多吃膳食纤维。": " in the last 7 days — on the low side. Drink more water and eat more fiber.", "最近7天记录了": "Logged ", "，频率偏高，如伴随不适建议关注饮食。": " in the last 7 days — on the high side. If you feel unwell, keep an eye on your diet.", "最近7天记录": "Logged ", "，频率在健康区间内（每周3~21次）。": " in the last 7 days — within the healthy range (3–21 per week).", "最近": "Lately ", "偏硬型": "firm types", "占比较高，可能轻度便秘，建议增加水分与蔬果摄入。": " make up a large share — possibly mild constipation. Try more water, fruit and vegetables.", "偏稀型": "loose types", "占比较高，注意饮食卫生，持续请留意身体状况。": " make up a large share — mind food hygiene, and keep an eye on how you feel if it continues.", "大部分记录都在": "Most records are in the ", "理想形态": "ideal range", "，消化系统状态不错。": " — your digestion looks good."};
+function _pre(n,t){ return n ? (n+', '+t.charAt(0).toLowerCase()+t.slice(1)) : t; }
+const PAT=[
+ [/^(\d{4})年(\d{1,2})月(\d{1,2})日(?: (\d{1,2}:\d{2}))?$/, m=>MON[+m[2]-1]+' '+(+m[3])+', '+m[1]+(m[4]?' '+m[4]:'')],
+ [/^(\d{4})年(\d{1,2})月$/, m=>MON[+m[1+1]-1]+' '+m[1]],
+ [/^(\d{4})年$/, m=>m[1]],
+ [/^(\d+) ?次$/, m=>m[1]+(m[1]==='1'?' time':' times')],
+ [/^(\d+) 天$/, m=>m[1]+(m[1]==='1'?' day':' days')],
+ [/^第(\d+)次$/, m=>'No. '+m[1]],
+ [/^养分 (\d+)$/, m=>m[1]+' nutrients'],
+ [/^\+(\d+) 养分$/, m=>'+'+m[1]+' nutrients'],
+ [/^已经 (\d+) 天没施肥了，有点蔫$/, m=>'No fertilizer for '+m[1]+' days — wilting a little'],
+ [/^共施肥 (\d+) 次 · 当前连续 (\d+) 天$/, m=>'Fertilized '+m[1]+' times · current streak '+m[2]+' days'],
+ [/^共施肥 (\d+) 次 · 相伴 (\d+) 天$/, m=>'Fertilized '+m[1]+' times · together '+m[2]+' days'],
+ [/^第(\d+)代 · (.*)$/, m=>'Gen '+m[1]+' · '+tr(m[2])],
+ [/^第(\d+)代$/, m=>'Gen '+m[1]],
+ [/^(刚刚|\d+小时前|\d+天前)：(.+)$/, m=>{ const a=m[1]==='刚刚'?'just now':(m[1].indexOf('小时')>0?parseInt(m[1])+'h ago':parseInt(m[1])+'d ago'); return a+': '+tr(m[2]); }],
+ [/^养分 ([\d.]+) · 还差 ([\d.]+) 到「(.+?)」(?: · 另有 (\d+) 正在吸收中)?$/, m=>'Nutrients '+m[1]+' · '+m[2]+' to go until “'+tr(m[3])+'”'+(m[4]?' · '+m[4]+' more absorbing':'')],
+ [/^养分 ([\d.]+) · 已是终极形态(?: · 另有 (\d+) 正在吸收中)?$/, m=>'Nutrients '+m[1]+' · Final form reached'+(m[2]?' · '+m[2]+' more absorbing':'')],
+ [/^(.+?) 现在是「(.+)」$/, m=>m[1]+' Now: '+tr(m[2])],
+ [/^✦ 解锁里程碑：(.*)$/, m=>'✦ Milestone unlocked: '+m[1]],
+ [/^✦ 达成里程碑：(.*?)(?:（第(\d+)次）)?$/, m=>'✦ Milestone reached: '+m[1]+(m[2]?' (No. '+m[2]+')':'')],
+ [/^解锁足迹「(.+?)」！(.+)$/, m=>'Footprint unlocked: “'+tr(m[1])+'”! '+tr(m[2])],
+ [/^第(\d+)代完整走完了一生：共施肥 (\d+) 次，相伴 (\d+) 天$/, m=>'Generation '+m[1]+' lived a full life: fertilized '+m[2]+' times, together '+m[3]+' days'],
+ [/^新一代继承了偏好：更爱(.+)$/, m=>'The new generation inherited a taste: it prefers '+tr(m[1]).toLowerCase()],
+ [/^它留下了一份遗产：(.+)$/, m=>'It left a legacy: '+tr(m[1]).toLowerCase()],
+ [/^最常见的肥料：(.+)$/, m=>'Most common fertilizer: '+tr(m[1])],
+ [/^留下的遗产：(.+)$/, m=>'Legacy left: '+tr(m[1]).toLowerCase()],
+ [/^现在是第(\d+)代，还没有一代完整走完$/, m=>'This is generation '+m[1]+' — none has lived a full life yet'],
+ [/^即将导入 (\d+) 条记录，是否覆盖当前所有数据？$/, m=>'About to import '+m[1]+' records. Overwrite all current data?'],
+];
+function _has(o,k){ return Object.prototype.hasOwnProperty.call(o,k); }
+function tr(s){
+  if(LANG!=='en' || s==null) return s;
+  s=String(s);
+  if(!CJK.test(s)) return s;
+  if(_has(EN,s)) return EN[s];
+  for(let i=0;i<PAT.length;i++){ const m=s.match(PAT[i][0]); if(m) return PAT[i][1](m); }
+  const mm=s.match(/^([^\u4e00-\u9fff]+)([\u4e00-\u9fff][\s\S]*)$/);
+  if(mm){ const r=tr(mm[2]); if(r!==mm[2]) return mm[1]+r; }
+  const parts=s.split(/(\s+|·|\/|,|，|；|;)/); let ok=true;
+  const out=parts.map(p=>{
+    if(!CJK.test(p)) return p;
+    if(_has(EN,p)) return EN[p];
+    const q=p.match(/^([^\u4e00-\u9fff]+)([\u4e00-\u9fff][\s\S]*)$/);
+    if(q && _has(EN,q[2])) return q[1]+EN[q[2]];
+    ok=false; return p;
+  });
+  return ok?out.join(''):s;
+}
+const ORIG=new WeakMap();
+function i18nText(n){
+  if(LANG!=='en') return;
+  const p=n.parentNode; if(p){ const tg=p.nodeName; if(tg==='SCRIPT'||tg==='STYLE'||tg==='TEXTAREA') return; }
+  const cur=n.nodeValue; if(!cur || !CJK.test(cur)) return;
+  const lead=cur.match(/^\s*/)[0], trail=cur.match(/\s*$/)[0], core=cur.trim();
+  const out=tr(core); if(out===core) return;
+  if(!ORIG.has(n)) ORIG.set(n,cur);
+  n.nodeValue=lead+out+trail;
+}
+function i18nAttr(el,a){
+  if(LANG!=='en' || !el.getAttribute) return;
+  const v=el.getAttribute(a); if(!v || !CJK.test(v)) return;
+  const out=tr(v); if(out===v) return;
+  const k='zh'+a.charAt(0).toUpperCase()+a.slice(1);
+  if(el.dataset && el.dataset[k]===undefined) el.dataset[k]=v;
+  el.setAttribute(a,out);
+}
+function i18nNode(root){
+  if(!root) return;
+  if(root.nodeType===3){ i18nText(root); return; }
+  if(root.nodeType!==1) return;
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null); const list=[];
+  while(w.nextNode()) list.push(w.currentNode);
+  list.forEach(i18nText);
+  ['placeholder','title'].forEach(a=>{
+    if(root.hasAttribute && root.hasAttribute(a)) i18nAttr(root,a);
+    root.querySelectorAll('['+a+']').forEach(el=>i18nAttr(el,a));
+  });
+}
+function i18nRevert(){
+  const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null); const list=[];
+  while(w.nextNode()) list.push(w.currentNode);
+  list.forEach(n=>{ if(ORIG.has(n)){ n.nodeValue=ORIG.get(n); ORIG.delete(n); } });
+  document.querySelectorAll('[data-zh-placeholder],[data-zh-title]').forEach(el=>{
+    if(el.dataset.zhPlaceholder!==undefined){ el.setAttribute('placeholder',el.dataset.zhPlaceholder); delete el.dataset.zhPlaceholder; }
+    if(el.dataset.zhTitle!==undefined){ el.setAttribute('title',el.dataset.zhTitle); delete el.dataset.zhTitle; }
+  });
+}
+function fmtMY(y,m0){ return LANG==='en' ? (MON[m0]+' '+y) : (y+'年'+(m0+1)+'月'); }
+function fmtY(y){ return LANG==='en' ? String(y) : (y+'年'); }
+/* ===== end i18n ===== */
+
+const _nativeAlert=window.alert.bind(window), _nativeConfirm=window.confirm.bind(window);
+window.alert=function(msg){ return _nativeAlert(tr(msg)); };
+window.confirm=function(msg){ return _nativeConfirm(tr(msg)); };
+const _i18nObs=new MutationObserver(muts=>{
+  if(LANG!=='en') return;
+  muts.forEach(m=>{
+    if(m.type==='childList'){ m.addedNodes.forEach(n=>i18nNode(n)); }
+    else if(m.type==='characterData'){ i18nText(m.target); }
+    else if(m.type==='attributes'){ i18nAttr(m.target,m.attributeName); }
+  });
+});
+_i18nObs.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['placeholder','title']});
+
 const TYPES=[
  {id:1,ic:'🐑',name:'羊球状',desc:'硬块,便秘',color:'#9c6b3f'},
  {id:2,ic:'🌰',name:'香肠块状',desc:'偏硬',color:'#b07d3f'},
@@ -348,7 +468,7 @@ const MILESTONES=[
  {type:'pts',pts:5000,title:'与你共生',  ic:'🌌', desc:'{name}早就不只是一株植物，是你日子里的一部分。'},
  {type:'count',n:10000,title:'拉屎大王', ic:'👑', desc:'一万次，当之无愧的拉屎大王，{name}向你鞠躬。'},
 ];
-function mileText(t){ return t.replace(/\{name\}/g, getPlantName()||'它'); }
+function mileText(t){ return tr(t).replace(/\{name\}/g, getPlantName()||(LANG==='en'?'it':'它')); }
 function mileKey(m){ return m.type+':'+(m.type==='count'?m.n:m.pts); }
 function getMileUnlocked(){ try{return JSON.parse(localStorage.getItem('poop_plant_mileUnlocked'))||{};}catch(e){return {};} }
 function setMileUnlocked(o){ try{localStorage.setItem('poop_plant_mileUnlocked',JSON.stringify(o));}catch(e){} }
@@ -469,6 +589,43 @@ function computeBaseXP(entry,streak){
   if(streak>=2){ const bonus=Math.min(streak*2,20); xp+=bonus; msgs.push(toneAdjust(`连续施肥 ${streak} 天，连击经验+${bonus}。`)); }
   return {xp,msgs};
 }
+function getBadgeUnlocked(){ try{return JSON.parse(localStorage.getItem('poop_badge_unlocked'))||{};}catch(e){return {};} }
+function setBadgeUnlocked(o){ try{localStorage.setItem('poop_badge_unlocked',JSON.stringify(o));}catch(e){} }
+function recordBadgeUnlock(id,ts){ const u=getBadgeUnlocked(); if(!u[id]){ u[id]={date:ts}; setBadgeUnlocked(u); } }
+function backfillBadges(list,achievedIds){
+  const u=getBadgeUnlocked();
+  const missing=achievedIds.filter(id=>!u[id]);
+  if(!missing.length) return;
+  const asc=[...list].sort((a,b)=>a.time-b.time);
+  let changed=false;
+  missing.forEach(id=>{
+    const b=BADGE_DEFS.find(x=>x.id===id);
+    let found=null;
+    for(let i=0;i<asc.length;i++){
+      const sub=asc.slice(0,i+1);
+      try{ if(b.test(sub, currentStreak(sub, sub[i].time), longestStreak(sub))){ found=sub[i].time; break; } }catch(e){}
+    }
+    u[id]={date: found || Date.now(), approx: !found};
+    changed=true;
+  });
+  if(changed) setBadgeUnlocked(u);
+}
+function dayEntriesSummary(ts){
+  if(!ts) return '';
+  const d=new Date(ts);
+  const same=loadData().filter(e=>new Date(e.time).toDateString()===d.toDateString());
+  if(!same.length) return '这天没有便便记录';
+  return same.map(e=>{ const t=TYPES.find(t=>t.id===e.type); return `${t?t.ic:''} ${t?t.name:''}${e.mood?(' · '+e.mood):''} · ${fmtDate(e.time).split(' ')[1]}`; }).join('<br>');
+}
+function openAchieveDetail(title,ic,date,note,approx){
+  document.getElementById('adTitle').textContent=`${ic} ${title}`;
+  document.getElementById('adDate').textContent = date ? ('🗓 '+fmtDay(date)+(approx?'（大致时间）':'')) : '';
+  document.getElementById('adEvents').innerHTML = date ? dayEntriesSummary(date) : '这天没有便便记录';
+  document.getElementById('adNote').textContent = note||'';
+  openOv(document.getElementById('achieveDetailOv'));
+}
+document.getElementById('adClose').onclick=()=>closeOv(document.getElementById('achieveDetailOv'));
+document.getElementById('achieveDetailOv').onclick=(e)=>{ if(e.target.id==='achieveDetailOv') closeOv(document.getElementById('achieveDetailOv')); };
 function computeBadges(list,streak,longest){ return BADGE_DEFS.filter(b=>b.test(list,streak,longest)).map(b=>b.id); }
 function openOv(ov){ ov.style.display='flex'; requestAnimationFrame(()=>ov.classList.add('show')); }
 function closeOv(ov){ ov.classList.remove('show'); setTimeout(()=>{ if(!ov.classList.contains('show')) ov.style.display='none'; },260); }
@@ -540,6 +697,7 @@ document.getElementById('btnSave').onclick=()=>{
   const newBadges=computeBadges(newList,newStreak,newLongest).filter(id=>!prevBadges.includes(id));
   newBadges.forEach(id=>{
     const b=BADGE_DEFS.find(x=>x.id===id);
+    recordBadgeUnlock(id,time);
     bonus+=20; if(!specialTitle) specialTitle='🏅 解锁新足迹';
     specialMsgs.push(`解锁足迹「${b.label}」！${b.fun}`);
   });
@@ -948,7 +1106,7 @@ function settleEvents(){
   showToast(msgs.length>1?'🌱 这几天的植物纪事':'🌱 植物纪事', msgs, false, pick(EAT_PHRASES));
 }
 let currentMonologue='';
-function fillN(t){ return String(t).replace(/\{n\}/g, getPlantName()||'它'); }
+function fillN(t){ return tr(String(t)).replace(/\{n\}/g, getPlantName()||(LANG==='en'?'it':'它')); }
 function pickMonologue(){
   const h=new Date().getHours(); const pool=(h>=6&&h<18)?DAY_LINES:NIGHT_LINES;
   let idx=Math.floor(Math.random()*pool.length);
@@ -1109,9 +1267,16 @@ function render(){
   const mmap=getMilestoneMap(list);
   document.getElementById('mileWall').innerHTML=MILESTONES.map(m=>{
     const mm=mmap[mileKey(m)];
-    if(mm.achieved) return `<div class="wallcard mile"><span class="wic">${m.ic}</span><b>${mileText(m.title)}</b><br>${m.type==='count'?`第${m.n}次`:`养分 ${m.pts}`}</div>`;
+    if(mm.achieved) return `<div class="wallcard mile" data-key="${mileKey(m)}"><span class="wic">${m.ic}</span><b>${mileText(m.title)}</b><br>${m.type==='count'?`第${m.n}次`:`养分 ${m.pts}`}</div>`;
     return `<div class="wallcard locked">🔒</div>`;
   }).join('');
+  document.querySelectorAll('#mileWall .wallcard.mile[data-key]').forEach(el=>{
+    el.style.cursor='pointer';
+    el.onclick=()=>{
+      const m=MILESTONES.find(x=>mileKey(x)===el.dataset.key); const mm=mmap[el.dataset.key];
+      openAchieveDetail(mileText(m.title), m.ic, mm.date?mm.date.getTime():null, mileText(m.desc), false);
+    };
+  });
 
   const analysisBox=document.getElementById('analysisBox');
   if(list.length===0){ analysisBox.innerHTML='暂无便便记录，快去记录一次吧～'; }
@@ -1148,8 +1313,16 @@ function render(){
 
   const badgeEl=document.getElementById('badges');
   const badgeIds=computeBadges(list,streak,longestStreak(list));
-  const shown=BADGE_DEFS.filter(b=>badgeIds.includes(b.id)).map(b=>`<span class="badge">${b.ic} ${b.label}</span>`);
+  backfillBadges(list,badgeIds);
+  const shown=BADGE_DEFS.filter(b=>badgeIds.includes(b.id)).map(b=>`<span class="badge" data-id="${b.id}">${b.ic} ${b.label}</span>`);
   badgeEl.innerHTML = shown.length ? shown.join('') : '<span style="color:var(--sub);font-size:13px">继续记录便便，留下更多脚印～</span>';
+  badgeEl.querySelectorAll('.badge[data-id]').forEach(el=>{
+    el.style.cursor='pointer';
+    el.onclick=()=>{
+      const b=BADGE_DEFS.find(x=>x.id===el.dataset.id); const u=getBadgeUnlocked()[el.dataset.id];
+      openAchieveDetail(b.label,b.ic,u?u.date:null,b.fun,u?!!u.approx:false);
+    };
+  });
 }
 
 function escHtml(t){ return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -1288,6 +1461,7 @@ applyFavicon();
 refreshTagline(true);
 render();
 startLingerTimer();
+if(LANG==='en') i18nNode(document.body);
 
 document.querySelectorAll('.popt').forEach(b=>{ b.onclick=()=>{ statsPeriod=b.dataset.period; renderStatsPeriod(); }; });
 document.getElementById('gotoFertBtn').onclick=()=>document.querySelector('[data-p="record"]').click();
@@ -1316,23 +1490,15 @@ document.getElementById('btnHistory').onclick=()=>openOv(document.getElementById
 document.getElementById('historyClose').onclick=()=>closeOv(document.getElementById('historyOv'));
 document.getElementById('historyOv').onclick=(e)=>{ if(e.target.id==='historyOv') closeOv(document.getElementById('historyOv')); };
 
-const I18N={
- zh:{tab_plant:'植物',tab_record:'施肥',tab_stats:'足迹',tab_mine:'我的',submit:'施肥',goFert:'🌾 去施肥'},
- en:{tab_plant:'Plant',tab_record:'Log',tab_stats:'Trace',tab_mine:'Me',submit:'Log it',goFert:'🌾 Go log'}
-};
-function applyLang(){
-  const lang=localStorage.getItem('poop_plant_lang')||'zh';
-  const tabs=document.querySelectorAll('.tab-btn');
-  tabs[0].textContent=I18N[lang].tab_plant; tabs[1].textContent=I18N[lang].tab_record;
-  tabs[2].textContent=I18N[lang].tab_stats; tabs[3].textContent=I18N[lang].tab_mine;
-  document.getElementById('btnSave').textContent=I18N[lang].submit;
-  document.getElementById('gotoFertBtn').textContent=I18N[lang].goFert;
-  document.querySelectorAll('#langBtns .opt').forEach(o=>o.classList.toggle('sel', o.dataset.lang===lang));
+function setLang(l){
+  LANG=l; try{ localStorage.setItem('poop_plant_lang', l); }catch(e){}
+  document.querySelectorAll('#langBtns .opt').forEach(o=>o.classList.toggle('sel', o.dataset.lang===l));
+  if(l==='zh') i18nRevert();
+  render();
+  if(l==='en') i18nNode(document.body);
 }
-document.querySelectorAll('#langBtns .opt').forEach(o=>{
-  o.onclick=()=>{ localStorage.setItem('poop_plant_lang', o.dataset.lang); applyLang(); };
-});
-applyLang();
+document.querySelectorAll('#langBtns .opt').forEach(o=>{ o.onclick=()=>setLang(o.dataset.lang); });
+document.querySelectorAll('#langBtns .opt').forEach(o=>o.classList.toggle('sel', o.dataset.lang===LANG));
 </script>
 </body>
 </html>

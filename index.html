@@ -97,6 +97,7 @@ h1{font-family:'Noto Serif SC',serif;font-size:27px;margin:10px 0 8px;letter-spa
 .kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px;}
 .kv span:first-child{color:var(--sub);flex-shrink:0;}
 .kv span:last-child{font-weight:600;text-align:right;}
+.backup-hint{font-size:11.5px;color:var(--sub);text-align:center;line-height:1.6;margin:0 6px 10px;padding:8px 10px;border:1px dashed var(--line);border-radius:12px;}
 .review-close{margin-top:10px;font-size:12.5px;color:var(--sub);text-align:center;border-top:1px dashed var(--line);padding-top:8px;}
 .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
 .cal-head button{border:none;background:var(--bg);color:var(--text);border-radius:8px;padding:5px 10px;font-size:14px;cursor:pointer;}
@@ -247,6 +248,7 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
     <button class="rowbtn" id="btnSettings"><span>⚙ 设置</span><span class="chev">›</span></button>
     <button class="rowbtn" id="btnHistory"><span>💩 历史便便记录</span><span class="chev">›</span></button>
     <button class="rowbtn" id="btnNotes"><span>📝 留下的话</span><span class="chev">›</span></button>
+    <div class="backup-hint" id="backupHint" style="display:none"></div>
     <div class="card"><h2>数据管理</h2>
       <div class="dmrow"><button class="dmbtn" id="btnExport">导出</button><button class="dmbtn" id="btnImport">导入</button><button class="dmbtn danger" id="btnReset">清空数据</button></div>
     </div>
@@ -765,10 +767,11 @@ document.getElementById('btnExport').onclick=()=>{
     const blob=new Blob([exportPayload()],{type:'application/json'});
     const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`此事有记备份_${Date.now()}.json`;
     document.body.appendChild(a); a.click(); a.remove();
+    markExported();
     closeOv(document.getElementById('dataOv'));
   };
   document.getElementById('doExportCopy').onclick=async()=>{
-    try{ await navigator.clipboard.writeText(exportPayload()); alert('已复制到剪贴板'); }
+    try{ await navigator.clipboard.writeText(exportPayload()); markExported(); alert('已复制到剪贴板'); }
     catch(e){ alert('复制失败，可尝试"导出为文件"'); }
     closeOv(document.getElementById('dataOv'));
   };
@@ -787,23 +790,51 @@ document.getElementById('btnImport').onclick=()=>{
   });
   document.getElementById('doImportConfirm').onclick=()=>importData(document.getElementById('importArea').value);
 };
-function exportPayload(){ return JSON.stringify({entries:loadData(), username:getName(), tone:getTone()}); }
+const KEEP_KEYS=['poop_plant_lang','poop_plant_lastExport'];
+function appKeys(){ const ks=[]; try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k && k.indexOf('poop_')===0 && KEEP_KEYS.indexOf(k)<0) ks.push(k); } }catch(e){} return ks; }
+const BACKUP_DAYS=30;
+function markExported(){ try{ localStorage.setItem('poop_plant_lastExport',String(Date.now())); }catch(e){} updateBackupHint(); }
+function updateBackupHint(){
+  const el=document.getElementById('backupHint'); if(!el) return;
+  const list=loadData();
+  if(!list.length){ el.style.display='none'; return; }
+  let last=parseFloat(localStorage.getItem('poop_plant_lastExport'))||0;
+  const base=last||Math.min(...list.map(e=>e.time));
+  const days=Math.floor((Date.now()-base)/86400000);
+  if(days<BACKUP_DAYS){ el.style.display='none'; return; }
+  const en=LANG==='en';
+  el.textContent = last
+    ? (en ? `It has been ${days} days since your last backup. Consider exporting a copy below.` : `已经 ${days} 天没有备份了，建议在下方「导出」保存一份。`)
+    : (en ? 'You have never exported a backup. Consider exporting a copy below.' : '还没有导出过备份，建议在下方「导出」保存一份。');
+  el.style.display='block';
+}
+function exportPayload(){
+  const data={}; appKeys().forEach(k=>{ data[k]=localStorage.getItem(k); });
+  return JSON.stringify({v:2, entries:loadData(), username:getName(), tone:getTone(), data});
+}
 function importData(text){
   try{
     const obj=JSON.parse(text);
     if(!obj || !Array.isArray(obj.entries)) throw new Error('bad');
     if(!confirm(`即将导入 ${obj.entries.length} 条记录，是否覆盖当前所有数据？`)) return;
-    saveData(obj.entries);
-    try{
-      if(obj.username) localStorage.setItem('poop_username',obj.username);
-      if(obj.tone) localStorage.setItem('poop_tone',obj.tone);
-    }catch(e){}
+    if(obj.v===2 && obj.data && typeof obj.data==='object'){
+      try{
+        appKeys().forEach(k=>localStorage.removeItem(k));
+        Object.keys(obj.data).forEach(k=>{ if(k.indexOf('poop_')===0 && KEEP_KEYS.indexOf(k)<0 && typeof obj.data[k]==='string') localStorage.setItem(k,obj.data[k]); });
+      }catch(e){}
+    }else{
+      saveData(obj.entries);
+      try{
+        if(obj.username) localStorage.setItem('poop_username',obj.username);
+        if(obj.tone) localStorage.setItem('poop_tone',obj.tone);
+      }catch(e){}
+    }
     alert('导入成功！'); location.reload();
   }catch(e){ alert('导入失败，请检查内容格式是否正确'); }
 }
 document.getElementById('btnReset').onclick=()=>{
   if(confirm('确定要清空所有本地数据吗？此操作不可恢复。')){
-    try{ localStorage.removeItem('poop_entries'); localStorage.removeItem('poop_username'); localStorage.removeItem('poop_tone'); }catch(e){}
+    try{ appKeys().forEach(k=>localStorage.removeItem(k)); }catch(e){}
     location.reload();
   }
 };
@@ -1264,6 +1295,7 @@ function render(){
   const streak=currentStreak(list);
 
   renderStatsPeriod();
+  updateBackupHint();
 
   renderCalendar(list);
 

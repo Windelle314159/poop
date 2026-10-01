@@ -86,6 +86,15 @@ h1{font-family:var(--serif);font-size:27px;margin:10px 0 8px;letter-spacing:4px;
 .modal-box.tall{display:flex;flex-direction:column;overflow:hidden;max-height:80vh;}
 .modal-box.tall .scroll{flex:1;min-height:0;overflow-y:auto;}
 .modal-box.tall .modal-close{flex-shrink:0;}
+.fold-h{display:flex;align-items:center;gap:6px;width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:11px 2px;font-family:inherit;font-size:13px;font-weight:700;color:var(--accent2);cursor:pointer;text-align:left;}
+.fold-h .arr{display:inline-block;transition:transform .2s;font-size:10px;color:var(--sub);width:10px;}
+.fold.open>.fold-h .arr{transform:rotate(90deg);}
+.fold-h .cnt{margin-left:auto;color:var(--sub);font-weight:400;font-size:12px;}
+.fold-b{display:none;}
+.fold.open>.fold-b{display:block;}
+.fold .fold{margin-left:10px;}
+.modal-box.tall.fixed{height:min(600px,78vh);max-height:none;}
+@supports (height:1dvh){.modal-box.tall.fixed{height:min(600px,78dvh);}}
 .monthhead{font-size:12px;font-weight:700;color:var(--accent2);margin:14px 0 6px;}
 .monthhead:first-child{margin-top:0;}
 .monthhead span{color:var(--sub);font-weight:400;margin-left:6px;}
@@ -279,13 +288,13 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
     <button class="modal-close" id="settingsClose">关闭</button>
   </div></div>
 
-  <div class="overlay" id="historyOv"><div class="modal-box tall" style="text-align:left">
+  <div class="overlay" id="historyOv"><div class="modal-box tall fixed" style="text-align:left">
     <div class="ttl" style="text-align:center">历史便便记录</div>
     <div class="scroll"><div id="historyList"><div class="empty">还没有记录</div></div></div>
     <button class="modal-close" id="historyClose">关闭</button>
   </div></div>
 
-  <div class="overlay" id="editOv"><div class="modal-box tall" style="text-align:left">
+  <div class="overlay" id="editOv"><div class="modal-box tall fixed" style="text-align:left">
     <div class="ttl" style="text-align:center">编辑记录</div>
     <div class="scroll">
       <div class="card"><h2>形状（布里斯托分类）</h2><div class="opts" id="ed-type"></div></div>
@@ -300,7 +309,7 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
     <div class="modal-btns"><button id="editCancel">取消</button><button class="primary" id="editSave">保存</button></div>
   </div></div>
 
-  <div class="overlay" id="notesOv"><div class="modal-box tall" style="text-align:left">
+  <div class="overlay" id="notesOv"><div class="modal-box tall fixed" style="text-align:left">
     <div class="ttl" style="text-align:center">留下的话</div>
     <div class="scroll" id="notesList"></div>
     <button class="modal-close" id="notesClose">关闭</button>
@@ -350,6 +359,7 @@ const PAT=[
  [/^(\d{4})年(\d{1,2})月(\d{1,2})日(?: (\d{1,2}:\d{2}))?$/, m=>MON[+m[2]-1]+' '+(+m[3])+', '+m[1]+(m[4]?' '+m[4]:'')],
  [/^(\d{4})年(\d{1,2})月$/, m=>MON[+m[1+1]-1]+' '+m[1]],
  [/^(\d{4})年$/, m=>m[1]],
+ [/^(\d{1,2})月$/, m=>MON[+m[1]-1]],
  [/^(\d+) ?次$/, m=>m[1]+(m[1]==='1'?' time':' times')],
  [/^(\d+) 天$/, m=>m[1]+(m[1]==='1'?' day':' days')],
  [/^第(\d+)次$/, m=>'No. '+m[1]],
@@ -722,6 +732,7 @@ function longestStreak(list){
   return max;
 }
 
+const histOpen=new Set();
 document.getElementById('btnSave').onclick=()=>{
   if(!sel.type){ alert('至少选一下形状吧'); return; }
   const list=loadData();
@@ -1358,19 +1369,30 @@ function render(){
   const hEl=document.getElementById('historyList');
   if(list.length===0){ hEl.innerHTML='<div class="empty">还没有记录，快去记录一次吧</div>'; }
   else{
-    const monthCount={};
-    list.forEach(e=>{ const d=new Date(e.time); const k=d.getFullYear()+'-'+d.getMonth(); monthCount[k]=(monthCount[k]||0)+1; });
-    let lastK=null;
-    hEl.innerHTML=list.map((e,i)=>{
+    // group: year -> month; current-year months sit at top level, older years fold months inside
+    const nowY=new Date().getFullYear();
+    const groups={};
+    list.forEach((e,i)=>{ const d=new Date(e.time); const y=d.getFullYear(), m=d.getMonth();
+      ((groups[y]=groups[y]||{})[m]=groups[y][m]||[]).push({e,idx:list.length-1-i}); });
+    const rowHTML=({e,idx})=>{
       const t=TYPES.find(t=>t.id===e.type);
-      const d0=new Date(e.time); const k0=d0.getFullYear()+'-'+d0.getMonth();
-      let head='';
-      if(k0!==lastK){ lastK=k0; head=`<div class="monthhead">${d0.getFullYear()}年${d0.getMonth()+1}月<span>${monthCount[k0]} 次</span></div>`; }
-      return head+`<div class="entry"><div>
+      return `<div class="entry"><div>
         <div>${t?t.ic:''} ${t?t.name:''} · ${e.color||''} ${e.size||''} · <b style="color:var(--gold2)">+${e.xp||0}XP</b></div>
         <div class="meta">${fmtDate(e.time)} · ${e.mood||''} · ${e.duration||''} · ${e.place||''}</div>
-      </div><span class="acts"><button class="edit" data-idx="${list.length-1-i}">编辑</button><button class="del" data-idx="${list.length-1-i}">✕</button></span></div>`;
-    }).join('');
+      </div><span class="acts"><button class="edit" data-idx="${idx}">编辑</button><button class="del" data-idx="${idx}">✕</button></span></div>`;
+    };
+    const fold=(key,label,count,inner)=>`<div class="fold${histOpen.has(key)?' open':''}" data-key="${key}"><button class="fold-h" type="button"><span class="arr">▶</span><span>${label}</span><span class="cnt">${count} 次</span></button><div class="fold-b">${inner}</div></div>`;
+    const monthFold=(y,m,withYear)=>{ const rows=groups[y][m]; return fold(`m${y}-${m}`, withYear?`${y}年${m+1}月`:`${m+1}月`, rows.length, rows.map(rowHTML).join('')); };
+    const monthsDesc=y=>Object.keys(groups[y]).map(Number).sort((a,b)=>b-a);
+    const yearsDesc=Object.keys(groups).map(Number).sort((a,b)=>b-a);
+    let html='';
+    if(groups[nowY]) html+=monthsDesc(nowY).map(m=>monthFold(nowY,m,true)).join('');
+    yearsDesc.filter(y=>y!==nowY).forEach(y=>{
+      const total=Object.values(groups[y]).reduce((n,a)=>n+a.length,0);
+      html+=fold(`y${y}`, `${y}年`, total, monthsDesc(y).map(m=>monthFold(y,m,false)).join(''));
+    });
+    hEl.innerHTML=html;
+    hEl.querySelectorAll('.fold-h').forEach(h=>{ h.onclick=()=>{ const f=h.parentElement; const open=f.classList.toggle('open'); const k=f.dataset.key; if(open) histOpen.add(k); else histOpen.delete(k); }; });
     hEl.querySelectorAll('.edit').forEach(b=>{ b.onclick=()=>openEdit(parseInt(b.dataset.idx)); });
     hEl.querySelectorAll('.del').forEach(b=>{ b.onclick=()=>{ const all=loadData().sort((a,b)=>a.time-b.time); all.splice(parseInt(b.dataset.idx),1); saveData(all); render(); }; });
   }

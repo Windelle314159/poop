@@ -1429,36 +1429,83 @@ function build(sd){
 
 /* 叶子：沿一条微弯的叶轴生成叶形（基部尖、最宽处偏下、尖端渐收），cu 为尖端下垂量。
    中脉是从基部向叶尖渐细的实心形，侧脉是极细的弧线，不再是一根等粗的线 */
+/* 把一串点用 Catmull-Rom 变成平滑的三次曲线 */
+function smooth(P){
+  var d='',n=P.length-1,i,p0,p1,p2,p3;
+  for(i=0;i<n;i++){
+    p0=P[Math.max(0,i-1)];p1=P[i];p2=P[i+1];p3=P[Math.min(n,i+2)];
+    d+='C'+f1(p1[0]+(p2[0]-p0[0])/6)+' '+f1(p1[1]+(p2[1]-p0[1])/6)+' '+f1(p2[0]-(p3[0]-p1[0])/6)+' '+f1(p2[1]-(p3[1]-p1[1])/6)+' '+f1(p2[0])+' '+f1(p2[1]);
+  }
+  return d;
+}
 function leaf(arr,x,y,a,s,tone,cu,pw){
   if(s<1.2)return;
-  var L=s*1.9,w=s*S.lw*.8,c=(cu||0)*L,N=10,A=[],B=[],ax=[],ay=[],nx=[],ny=[],hw=[],i,t,tx,ty,m,k;
-  for(i=0;i<=N;i++){
-    t=i/N;ax[i]=c*t*t;ay[i]=-L*t;tx=2*c*t;ty=-L;m=Math.sqrt(tx*tx+ty*ty);
-    nx[i]=-ty/m;ny[i]=tx/m;
-    hw[i]=w*(t<.42?Math.sin(Math.PI/2*Math.pow(t/.42,1.35)):Math.cos(Math.PI/2*Math.pow((t-.42)/.58,.95)));
-    A.push(f1(ax[i]+nx[i]*hw[i]*1.05)+' '+f1(ay[i]+ny[i]*hw[i]*1.05));
-    B.push(f1(ax[i]-nx[i]*hw[i]*.95)+' '+f1(ay[i]-ny[i]*hw[i]*.95));
+  var L=s*1.9,w=s*S.lw*.8,c=(cu||0)*L,N=14,i,t,k;
+  function mid(t){return [c*t*t,-L*t];}
+  function fr(t){var tx=2*c*t,ty=-L,m=Math.sqrt(tx*tx+ty*ty);return [tx/m,ty/m];}   /* 主脉前进方向 */
+  function hwf(t){return w*(t<.42?Math.sin(Math.PI/2*Math.pow(t/.42,1.35)):Math.cos(Math.PI/2*Math.pow((t-.42)/.58,.95)));}
+  function edge(t,sd,off){var m=mid(t),f=fr(t),h=hwf(t)*(sd>0?1.05:.95)+(off||0);return [m[0]+(-f[1])*sd*h,m[1]+f[0]*sd*h];}
+  /* 樱花、月季的叶缘有细锯齿：沿叶缘每隔一小段有一个朝向叶尖的小尖齿（缓坡在前、陡坡在后），齿深随叶宽收窄，到叶尖和叶基自然消失；
+     其余（波斯菊）和很小的叶子保持光滑 */
+  var tooth=(S.k==='sakura'||S.k==='rose')&&L>=6,nT=tooth?clamp(Math.round(L*1.15),10,26):0,dT=clamp(L*.016,.1,.3);
+  function outline(sd){
+    var P=[],T=[],j;
+    if(!tooth){for(j=0;j<=N;j++)T.push([j/N,0]);}
+    else{
+      T.push([0,0],[.05,0],[.1,0]);
+      for(j=0;j<nT;j++){
+        var t0=.1+.88*j/nT,t1=.1+.88*(j+1)/nT,env=Math.min(1,hwf(t0+(t1-t0)*.7)/(w*.55));
+        T.push([t0,0],[t0+(t1-t0)*.72,dT*env]);
+      }
+      T.push([1,0]);
+    }
+    for(j=0;j<T.length;j++)P.push(edge(T[j][0],sd,T[j][1]));
+    return {P:P,T:T};
   }
+  var oA=outline(1),oB=outline(-1);
+  function pathOf(P,close){return 'M'+f1(P[0][0])+' '+f1(P[0][1])+(tooth?'L'+P.slice(1).map(function(p){return f1(p[0])+' '+f1(p[1]);}).join('L'):smooth(P));}
   var col=tone?'var(--leaf1)':'var(--leaf2)',o='<g transform="translate('+f1(x)+' '+f1(y)+')rotate('+(a+90).toFixed(0)+')">';
-  o+='<path d="M'+A.join('L')+'L'+B.slice().reverse().join('L')+'Z" fill="'+col+'"/>';
-  /* 背光一侧略深，基部略深：用半片叶形叠色，而不是整片一刀切 */
-  var H=[];for(i=0;i<=N;i++)H.push(f1(ax[i])+' '+f1(ay[i]));
-  o+='<path d="M'+B.join('L')+'L'+H.slice().reverse().join('L')+'Z" fill="var(--leafd)" opacity=".2"/>';
-  /* 中脉：从叶柄末端的颜色（茎色、与叶柄等宽）起，向叶尖渐变成叶脉色并渐细；起点往叶柄里多伸一点，所以柄→脉没有接缝 */
-  var pw2=Math.max(.2,(pw||0)/2),gid=ID+'pa-lm'+(lid++),M1=[f1(pw2)+' 1.4'],M2=[f1(-pw2)+' 1.4'];
-  for(i=0;i<=N-1;i++){var mw=Math.max(.06+.4*Math.pow(1-i/N,1.2)*Math.min(1,w/3),pw2*Math.pow(1-i/N,1.6));M1.push(f1(ax[i]+nx[i]*mw)+' '+f1(ay[i]+ny[i]*mw));M2.push(f1(ax[i]-nx[i]*mw)+' '+f1(ay[i]-ny[i]*mw));}
-  o+='<defs><linearGradient id="'+gid+'" gradientUnits="userSpaceOnUse" x1="0" y1="1.4" x2="0" y2="'+f1(-L*.45)+'"><stop offset="0" style="stop-color:var(--stem)"/><stop offset="1" style="stop-color:var(--leafd);stop-opacity:.5"/></linearGradient></defs><path d="M'+M1.join('L')+'L'+M2.reverse().join('L')+'Z" fill="url(#'+gid+')"/>';
-  if(w>=2.2){
-    var sv='';
-    [3,5,7].forEach(function(ki){
-      [1,-1].forEach(function(sd){
-        var ei=Math.min(N-1,ki+2),ex=ax[ei]+sd*nx[ei]*hw[ei]*.72,ey=ay[ei]+sd*ny[ei]*hw[ei]*.72;
-        var cx=ax[ki+1]+sd*nx[ki+1]*hw[ki+1]*.6,cy=ay[ki+1]+sd*ny[ki+1]*hw[ki+1]*.6;
-        sv+='M'+f1(ax[ki])+' '+f1(ay[ki])+'Q'+f1(cx)+' '+f1(cy)+' '+f1(ex)+' '+f1(ey);
-      });
-    });
-    o+='<path d="'+sv+'" stroke="var(--leafd)" stroke-width=".28" stroke-opacity=".3" fill="none" stroke-linecap="round"/>';
+  var Br=oB.P.slice().reverse();
+  o+='<path d="'+pathOf(oA.P)+(tooth?'L'+Br.map(function(p){return f1(p[0])+' '+f1(p[1]);}).join('L'):smooth(Br))+'Z" fill="'+col+'" stroke="'+col+'" stroke-width=".12" stroke-linejoin="round"/>';
+  /* 背光一侧略深 */
+  var H=oB.T.map(function(tt){return mid(tt[0]);}).reverse();
+  o+='<path d="'+pathOf(oB.P)+(tooth?'L'+H.map(function(p){return f1(p[0])+' '+f1(p[1]);}).join('L'):smooth(H))+'Z" fill="var(--leafd)" opacity=".2"/>';
+  /* 主脉 = 叶柄的延长：起点半宽严格等于叶柄末端半宽（叶柄本身不会比所在的枝粗），往叶尖平滑变细；颜色从茎色渐变到叶脉色 */
+  var pw2=Math.max(.08,(pw||0)/2),gid=ID+'pa-lm'+(lid++);
+  function mwAt(u){return pw2*Math.pow(1-u,1.35)+.035*(1-u);}
+  var M1=[[pw2,.3]],M2=[[-pw2,.3]];
+  for(i=0;i<=N-1;i++){
+    var u=i/N,m0=mid(u),f0=fr(u),mw=mwAt(u);
+    M1.push([m0[0]-f0[1]*mw,m0[1]+f0[0]*mw]);M2.push([m0[0]+f0[1]*mw,m0[1]-f0[0]*mw]);
   }
+  var tipP=mid((N-1)/N);M1.push(tipP);
+  var grad='<defs><linearGradient id="'+gid+'" gradientUnits="userSpaceOnUse" x1="0" y1=".3" x2="0" y2="'+f1(-L*.55)+'"><stop offset="0" style="stop-color:var(--stem)"/><stop offset="1" style="stop-color:var(--leafd);stop-opacity:.6"/></linearGradient></defs>';
+  /* 次脉像次干：从主脉上以锐角分出（先沿 ~50° 方向离开主脉，再逐渐转向叶缘），
+     基部宽度约为该处主脉的一半、末端渐尖，颜色取同一处主脉的颜色，所以主脉→次脉是同一套"枝干"，不画到叶缘 */
+  var vein='';
+  if(w>=2.2){
+    var nv=w>=4.2?4:w>=3?3:2;
+    for(k=0;k<nv;k++){
+      [1,-1].forEach(function(sd){
+        var tb=.17+.15*k+(sd>0?0:.06),te=Math.min(.9,tb+.22);
+        var B0=mid(tb),f0=fr(tb),nn=[-f0[1]*sd,f0[0]*sd],E=edge(te,sd,-hwf(te)*.2);
+        var len=Math.sqrt((E[0]-B0[0])*(E[0]-B0[0])+(E[1]-B0[1])*(E[1]-B0[1]))||1,ca=Math.cos(.87),sa=Math.sin(.87);
+        var C=[B0[0]+(f0[0]*ca+nn[0]*sa)*len*.55,B0[1]+(f0[1]*ca+nn[1]*sa)*len*.55];
+        var st=[B0[0]-f0[0]*.35,B0[1]-f0[1]*.35],vb=Math.max(.05,mwAt(tb)*.55);
+        var Lp=[],Rp=[],q,uu,pt,tg,mm,hh;
+        for(q=0;q<=6;q++){
+          uu=q/6;var iu=1-uu;
+          pt=[iu*iu*st[0]+2*iu*uu*C[0]+uu*uu*E[0],iu*iu*st[1]+2*iu*uu*C[1]+uu*uu*E[1]];
+          tg=[2*iu*(C[0]-st[0])+2*uu*(E[0]-C[0]),2*iu*(C[1]-st[1])+2*uu*(E[1]-C[1])];mm=Math.sqrt(tg[0]*tg[0]+tg[1]*tg[1])||1;
+          hh=vb*Math.pow(1-uu,1.1)+.012;
+          Lp.push([pt[0]-tg[1]/mm*hh,pt[1]+tg[0]/mm*hh]);Rp.push([pt[0]+tg[1]/mm*hh,pt[1]-tg[0]/mm*hh]);
+        }
+        vein+='<path d="M'+f1(Lp[0][0])+' '+f1(Lp[0][1])+smooth(Lp)+smooth(Rp.reverse())+'Z"/>';
+      });
+    }
+    o+=grad+'<g fill="url(#'+gid+')" opacity=".85">'+vein+'</g>';
+  }else o+=grad;
+  o+='<path d="M'+f1(M1[0][0])+' '+f1(M1[0][1])+smooth(M1.concat(M2.slice().reverse()))+'Z" fill="url(#'+gid+')"/>';
   arr.push(o+'</g>');
 }
 
@@ -1469,7 +1516,7 @@ function petal(h,w,fill,rot,dc,wl){
   return '<g transform="rotate('+rot+')"><path d="'+d+'" fill="url(#'+fill+')" stroke="'+dc+'" stroke-opacity=".35" stroke-width=".4"/>'+(wl>.03?'<path d="'+d+'" fill="#8a6a45" opacity="'+f1(wl*.5)+'"/>':'')+v+'</g>';
 }
 /* 萼片：披针形，和花瓣一样按三维方向投影，所以花苞时萼片与花苞等比例、同样被花的倾角压短 */
-function sepalPath(L){var w=L*.3;return '<path d="M0 0C'+(-w)+' '+(-L*.25)+' '+(-w*.8)+' '+(-L*.7)+' 0 '+(-L)+'C'+(w*.8)+' '+(-L*.7)+' '+w+' '+(-L*.25)+' 0 0Z" fill="var(--leafd)"/>';}
+function sepalPath(L,fr){var w=L*.24;return '<path d="M'+f1(-w*.9)+' 0C'+f1(-w*1.1)+' '+f1(-L*.3)+' '+f1(-w*.55)+' '+f1(-L*.75)+' 0 '+f1(-L)+'C'+f1(w*.55)+' '+f1(-L*.75)+' '+f1(w*1.1)+' '+f1(-L*.3)+' '+f1(w*.9)+' 0Z" fill="'+(fr?'var(--leafd)':'var(--stem)')+'"/>';}
 /* 花：每片花瓣按三维方向投影到屏幕。o 为开放程度 0→1，花瓣从并拢的花苞逐渐张开；
    f.b 是花轴朝向观众的倾角（樱花、月季侧着开，波斯菊近乎正对），f.r 绕花轴随机转动。
    花瓣宽度按其宽度方向在屏幕上的投影收窄（透视）。
@@ -1497,15 +1544,20 @@ function bloom(f,o,bs,pk,wt){
       items.push([d[2]+sg,'<path d="M0 0L'+f1(px)+' '+f1(py)+'" stroke="'+tone(pc.d)+'" stroke-opacity=".6" stroke-width=".35"/><circle cx="'+f1(px)+'" cy="'+f1(py)+'" r=".85" fill="var(--bloomc)"/>']);
     }
   }
-  /* 花托 + 4 枚萼片：花托是一个从花梗宽度逐渐张开的小杯（颜色由茎色渐变到萼片色），和花梗无缝衔接；
-     萼片花苞时贴紧包住花瓣（倾角 10°），开花时向外翻下去（倾角 105°），长度也随之缩短 */
-  var hw0=S.pw/2/(S.fs*f.sc)+.04,cr=Math.max(2.5*bs,hw0*1.2),CT=7;
-  items.push([-9,'<path d="M'+f1(-hw0)+' '+CT+'C'+f1(-hw0)+' '+f1(CT*.5)+' '+f1(-cr*1.05)+' 3.2 '+f1(-cr)+' .3C'+f1(-cr*.9)+' -2.3 '+f1(cr*.9)+' -2.3 '+f1(cr)+' .3C'+f1(cr*1.05)+' 3.2 '+f1(hw0)+' '+f1(CT*.5)+' '+f1(hw0)+' '+CT+'Z" fill="url(#'+ID+'cup)"/>']);
-  var sl=(5.6-1.2*e)*bs,stl=(10+95*e)*PI/180;
-  for(var q=0;q<4;q++){
-    var sph=(f.r+45+q*90)*PI/180,sd=dir(stl,sph),sl2=Math.max(Math.sqrt(sd[0]*sd[0]+sd[1]*sd[1]),.3);
-    items.push([sd[2]-.15,'<g transform="rotate('+f1(Math.atan2(sd[0],sd[1])*180/PI)+')scale(1 '+f1(sl2)+')">'+sepalPath(sl)+'</g>']);
-  }
+  /* 花萼是一个整体，并且从底部接花梗：底部是花托杯（杯底宽度 = 花梗末端宽度，向后略伸进花梗里重叠），
+     4 枚萼片的根全部长在杯口上（根部再往杯里压进去一点，所以任何时候都是连着的）。
+     花苞期：萼片又长又宽、略向内合拢，包住花瓣下面大半；开花时：萼片连续地变短、向外翻折下垂。
+     没有"花苞罩子 / 开花萼片"两套结构切换。
+     遮挡：后一对萼片始终在花瓣后面；前一对在花瓣还裹着时盖在花瓣前面，花瓣一张开（e≥.3）就退到花瓣后面，是连续的渐变 */
+  var hw0=S.pw/2/(S.fs*f.sc)+.04,cr=Math.max(1.3*bs+.55,hw0*1.35),rimY=-.8;
+  items.push([-9,'<path d="M'+f1(-hw0)+' 1.6C'+f1(-hw0)+' .3 '+f1(-cr)+' .1 '+f1(-cr)+' '+f1(rimY)+'Q0 '+f1(rimY-.9)+' '+f1(cr)+' '+f1(rimY)+'C'+f1(cr)+' .1 '+f1(hw0)+' .3 '+f1(hw0)+' 1.6Z" fill="url(#'+ID+'cup)"/>']);
+  var petLen=12.5*sz*pk,Lbud=Math.max(2.4*bs+.8,petLen*(.78-.22*clamp((pk-.35)/.65,0,1))),Lopen=3.4*bs+.9;
+  var kk=Math.pow(e,.75),Ls=Lbud+(Lopen-Lbud)*kk,tilt=-7+112*kk;
+  [[-1,.8,0],[1,.8,0],[-1,.3,1],[1,.3,1]].forEach(function(sp){
+    var fr2=sp[2]===1,sdn=sp[0],ang=sdn*tilt*(fr2?.5:1),Lq=Ls*(fr2?(1-.35*kk):1);
+    var z=fr2?1.6-3.4*clamp(e/.3,0,1):-1.1;
+    items.push([z,'<g transform="translate('+f1(sdn*cr*sp[1])+' '+f1(rimY+.7)+')rotate('+f1(ang)+')">'+sepalPath(Lq,fr2)+'</g>']);
+  });
   if(key==='sakura'){
     if(v===0){ring(5,12.4,5,'petalb',36,86);ring(5,11,4.6,'petal',0,78);stam(9,5,1.5);}
     else if(v===1){ring(5,13,5.2,'petalb',36,88);ring(5,12,5,'petal',0,80);ring(5,8.4,3.8,'petal',36,64);stam(6,4,1);}
@@ -1614,8 +1666,8 @@ function render(prog,o){
       var la=tb*180/PI+l.side*l.ang,s=l.s*qq,pl=s*.95,r1=la*PI/180;
       var kx=bx+Math.cos(tb+l.side*l.ang*PI/180*.12)*pl*.55,ky=by+Math.sin(tb+l.side*l.ang*PI/180*.12)*pl*.55;
       var lx=kx+Math.cos(r1)*pl*.5,ly=ky+Math.sin(r1)*pl*.5;
-      var la2=Math.atan2(ly-ky,lx-kx)*180/PI,w0=Math.max(.5,Math.min(clamp(s*.3,.8,2.3),(bw+(tw-bw)*l.t)*.78));
-      var w1=Math.max(.4,w0*.45);
+      var la2=Math.atan2(ly-ky,lx-kx)*180/PI,w0=Math.max(.2,Math.min(clamp(s*.3,.8,2.3),(bw+(tw-bw)*l.t)*.78));
+      var w1=Math.max(.16,Math.min(w0*.45,.5));
       out.push(petPoly(bx,by,kx,ky,lx+Math.cos(la2*PI/180)*.9,ly+Math.sin(la2*PI/180)*.9,w0,w1,lvl(n.d)+(lvl(n.d+1)-lvl(n.d))*l.t));
       if(rec)rec.push({l:l,x:lx,y:ly,dx:Math.cos(la2*PI/180),dy:Math.sin(la2*PI/180),L:s*1.9,w:s*S.lw*.8});
       leaf(l.back?lb:lv,lx,ly,la2,s,l.tone,.12*(Math.cos(la2*PI/180)>=0?1:-1),w1);
@@ -1633,7 +1685,7 @@ function render(prog,o){
       rp.push(f1(q[0]+q[3]/m*h)+' '+f1(q[1]-q[2]/m*h));
     }
     var dd='M'+lp.join('L')+'L'+rp.reverse().join('L')+'Z';
-    if(n.d===0)trunkDD=dd;
+    if(n.d===0&&out!==sm0)trunkDD=dd;
     out.push('<path d="'+dd+'" fill="var(--stem)"/>');
     /* 老嫩分色：同一形状上叠一层木色，不透明度从枝基部到枝梢递减，且层级越深越浅；
        子枝起点的木色浓度等于父枝梢的浓度，所以颜色连续。几何完全不变 */
@@ -1695,9 +1747,9 @@ function render(prog,o){
    +'<g clip-path="url(#'+ID+'pasoil)"><ellipse cx="'+f1(151+sz*4)+'" cy="269.5" rx="'+f1(8+sz*24)+'" ry="'+f1(1.8+sz*1.9)+'" fill="url(#'+ID+'pacs)" opacity="'+f1(.4+sz*.35)+'"/>'
    +(prog<SEED?'':'<ellipse cx="150" cy="269.2" rx="'+f1(S.rw*.9+7)+'" ry="2.7" fill="url(#'+ID+'pacs)" opacity=".6"/>')
    +'</g>'
-   +'<linearGradient id="'+ID+'paocc" gradientUnits="userSpaceOnUse" x1="0" y1="257" x2="0" y2="271.5"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".55" stop-color="#000" stop-opacity=".05"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient>';
+   +'<linearGradient id="'+ID+'paocc" gradientUnits="userSpaceOnUse" x1="0" y1="250" x2="0" y2="270.5"><stop offset="0" style="stop-color:var(--soil);stop-opacity:0"/><stop offset=".35" style="stop-color:var(--soil);stop-opacity:.3"/><stop offset=".7" style="stop-color:var(--soil);stop-opacity:.8"/><stop offset="1" style="stop-color:var(--soil);stop-opacity:1"/></linearGradient><linearGradient id="'+ID+'paocd" gradientUnits="userSpaceOnUse" x1="0" y1="256" x2="0" y2="271"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".6" stop-color="#000" stop-opacity=".16"/><stop offset="1" stop-color="#000" stop-opacity=".42"/></linearGradient>';
   var pacsD='<radialGradient id="'+ID+'pacs"><stop offset="0" stop-color="#000" stop-opacity=".42"/><stop offset=".55" stop-color="#000" stop-opacity=".16"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>';
-  var paoccD='<linearGradient id="'+ID+'paocc" gradientUnits="userSpaceOnUse" x1="0" y1="257" x2="0" y2="271.5"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".55" stop-color="#000" stop-opacity=".05"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient>';
+  var paoccD='<linearGradient id=\"'+ID+'paocc\" gradientUnits=\"userSpaceOnUse\" x1=\"0\" y1=\"252\" x2=\"0\" y2=\"270.5\"><stop offset=\"0\" style=\"stop-color:var(--soil);stop-opacity:0\"/><stop offset=\".4\" style=\"stop-color:var(--soil);stop-opacity:.3\"/><stop offset=\".72\" style=\"stop-color:var(--soil);stop-opacity:.68\"/><stop offset=\"1\" style=\"stop-color:var(--soil);stop-opacity:.97\"/></linearGradient><linearGradient id=\"'+ID+'paocd\" gradientUnits=\"userSpaceOnUse\" x1=\"0\" y1=\"256\" x2=\"0\" y2=\"271\"><stop offset=\"0\" stop-color=\"#000\" stop-opacity=\"0\"/><stop offset=\".6\" stop-color=\"#000\" stop-opacity=\".16\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".42\"/></linearGradient>';
   var parcD='<radialGradient id="'+ID+'parc"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset=".5" stop-color="#000" stop-opacity=".26"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>';
   var fragBase='<defs>'+pg+pacsD+paoccD+parcD+'</defs>'+(prog<SEED?'':'<ellipse cx="'+f1(151+sz*5)+'" cy="272" rx="'+f1(10+sz*28)+'" ry="'+f1(2.4+sz*2.4)+'" fill="url(#'+ID+'pacs)" opacity="'+f1(.5+sz*.3)+'"/><ellipse cx="150" cy="272" rx="'+f1(S.rw*.9+7)+'" ry="3" fill="url(#'+ID+'pacs)" opacity=".6"/>');
   var base=o.frag?fragBase:mainBase;
@@ -1708,7 +1760,7 @@ function render(prog,o){
     rb(tree.root,150,272.2,0,-1,99,sm,0);
     /* animation-delay 取负的当前相位：每帧重绘也不会让摇摆重新开始 */
     var ph=((((performance.now()-T0)/1000)+(o.phase||0))%10).toFixed(2);
-    var occ=trunkDD?'<rect x="110" y="250" width="80" height="24" fill="url(#'+ID+'paocc)" clip-path="url(#'+ID+'pa-tc)"/>':'';
+    var occ=trunkDD?'<rect x="110" y="250" width="80" height="24" fill="url(#'+ID+'paocc)" clip-path="url(#'+ID+'pa-tc)"/><rect x="110" y="250" width="80" height="24" fill="url(#'+ID+'paocd)" clip-path="url(#'+ID+'pa-tc)"/>':'';
     body='<defs>'+wg.join('')+(trunkDD?'<clipPath id="'+ID+'pa-tc"><path d="'+trunkDD+'"/></clipPath>':'')+'<clipPath id="'+ID+'pa-sc"><path d="M0 0H300V269.4H'+f1(150+S.rw*1.25+2)+'A'+f1(S.rw*1.25+2)+' 2.1 0 0 1 '+f1(150-S.rw*1.25-2)+' 269.4H0Z"/></clipPath></defs><g clip-path="url(#'+ID+'pa-sc)"><g class="pa-sway" style="animation-delay:-'+ph+'s">'+lb.join('')+sm0.join('')+sm.join('')+occ+lv.join('')+'<g opacity="'+al.toFixed(2)+'">'+fw.join('')+'</g>'+fall.join('')+'</g></g>';
   }
   /* 层次（后→前）：土面 → 投影与根部暗部（土面层，在植物之下）→ 植物（茎底按前缘弧线裁掉，像插进土里）

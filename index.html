@@ -33,7 +33,7 @@ button,input,textarea,select{font-family:inherit;}
 .wrap{max-width:520px;margin:0 auto;padding:16px 14px calc(96px + env(safe-area-inset-bottom,0px));}
 .header{text-align:center;margin-bottom:22px;padding-top:10px;}
 h1{font-family:var(--serif);font-size:27px;margin:10px 0 8px;letter-spacing:4px;font-weight:600;}
-.tag{color:var(--sub);font-family:var(--serif);font-weight:400;font-size:13.5px;letter-spacing:1.5px;line-height:1.8;padding:0 8px;}
+.tag{color:var(--sub);font-family:var(--serif);font-weight:400;font-size:13.5px;letter-spacing:1.5px;line-height:1.8;padding:0 8px;text-wrap:balance;}
 .hr-deco{width:50px;height:2px;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:3px;margin:16px auto 0;opacity:.75;}
 .hint{font-size:11px;color:var(--sub);text-align:center;margin:0 0 12px;line-height:1.5;}
 .tabs{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:520px;display:flex;gap:5px;background:var(--card);border:1px solid var(--line);border-top:1px solid var(--line);border-radius:16px 16px 0 0;padding:7px 6px calc(7px + env(safe-area-inset-bottom,0px));z-index:20;box-shadow:0 -4px 16px rgba(0,0,0,.08);}
@@ -2119,7 +2119,60 @@ const TAG_LINES=[
  '锦水有鸳，汉宫有木。',
  '漠漠水田飞白鹭，阴阴夏木啭黄鹂。',
  '当待春中，草木蔓发，春山可望。',
- '春日迟迟，卉木萋萋。'
+ '春日迟迟，卉木萋萋。',
+ '一径入寒竹，小桥穿野花。',
+ '碓喧春涧满，梯倚绿桑斜。',
+ '花间一壶酒，独酌无相亲。',
+ '我花开后百花杀。',
+ '花开堪折直须折，莫待无花空折枝。',
+ '白鹿原头回猎骑，紫云楼下醉江花。',
+ '春城何处不飞花。',
+ '感时花溅泪，恨别鸟惊心。',
+ '可惜明年花更好，知与谁同。',
+ '江流宛转绕芳甸，月照花林皆似霰。',
+ '舞低杨柳楼心月，歌尽桃花扇底风。',
+ '花褪残红青杏小。燕子飞时，绿水人家绕。',
+ '弦管变成山鸟哢，绮罗留作野花开。',
+ '园蘅眩红花，湖荇燡黄华。',
+ '清夜沉沉动春酌，灯前细雨檐花落。',
+ '暗淡轻黄体性柔，情疏迹远只香留。',
+ '请君有钱向酒家，君不见，蜀葵花。',
+ '满堂花醉三千客，一剑霜寒十四州。',
+ '水无定。花有尽。会相逢。',
+ '花底相看无一语，绿窗春与天俱莫。',
+ '酒醒只在花前坐，酒醉还须花下眠。',
+ '梨花淡白柳深青，柳絮飞时花满城。',
+ '桃花一簇开无主，可爱深红爱浅红？',
+ '楼头残梦五更钟，花底离愁三月雨。',
+ '春有百花秋有月，夏有凉风冬有雪。',
+ '花谢花飞花满天。',
+ '春风得意马蹄疾，一日看尽长安花。',
+ '山月不知心里事，水风空落眼前花，摇曳碧云斜。',
+ '人面不知何处去，桃花依旧笑春风。',
+ '梨花院落溶溶月，柳絮池塘淡淡风。',
+ '林花谢了春红，太匆匆。无奈朝来寒雨晚来风。',
+ '年年岁岁花相似，岁岁年年人不同。',
+ '花自飘零水自流。一种相思，两处闲愁。',
+ '取次花丛懒回顾，半缘修道半缘君。',
+ '我欲穿花寻路，直入白云深处，浩气展虹霓。',
+ '落花人独立，微雨燕双飞。',
+ '小楼一夜听春雨，深巷明朝卖杏花。',
+ '野花不种年年有，烦恼无根日日生。',
+ '窗外日光弹指过，席间花影坐前移。',
+ '去年今日此门中，人面桃花相映红。',
+ '近水楼台先得月，向阳花木易为春。',
+ '劝君莫惜花前醉，今年花谢，明年花谢，白了人头。',
+ '松树千年终是朽，槿花一日自为荣。',
+ '人间四月芳菲尽，山寺桃花始盛开。',
+ '满目山河空念远，落花风雨更伤春，不如怜取眼前人。',
+ '若待功成拂衣去，武陵桃花笑杀人。',
+ '有花有酒春常在，无烛无灯夜自明。',
+ '花开花落花无悔，缘来缘去缘如水。',
+ '海棠未雨，梨花先雪，一半春休。',
+ '惊飞远映碧山去，一树梨花落晚风。',
+ '江碧鸟逾白，山青花欲燃。',
+ '荷花十里，清风鉴水，明月天衣。',
+ '花影压重门，疏帘铺淡月，好黄昏。'
 ];
 function dailyTagline(){
   const d=new Date();

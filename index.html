@@ -1523,7 +1523,7 @@ function sepalPath(L,fr){var w=L*.24;return '<path d="M'+f1(-w*.9)+' 0C'+f1(-w*1
    bs=花苞长大比例(0.35→1)，pk=花瓣露出比例(小时花瓣藏在萼片里，只见绿色花苞) */
 function bloom(f,o,bs,pk,wt){
   wt=wt||0;
-  var items=[],v=f.v,key=S.k,pc=S.pal[f.c],b=f.b*PI/180,cb=Math.cos(b),sb=Math.sin(b);
+  var items=[],v=f.v,key=S.k,pc=S.pal[f.c],b=f.b*PI/180,cb=Math.cos(b),sb=Math.sin(b),rc=0;
   var gate=clamp((o-.6)/.3,0,1),sg=.08-.7*(1-gate);
   var e=o*o*(3-2*o),sz=(.5+.5*Math.min(1,o*1.6))*bs,wf=.6+.4*e;
   function dir(t,ph){var st=Math.sin(t),ct=Math.cos(t);return [st*Math.cos(ph),ct*cb-st*Math.sin(ph)*sb,ct*sb+st*Math.sin(ph)*cb];}
@@ -1533,7 +1533,9 @@ function bloom(f,o,bs,pk,wt){
       var ph=(off+j*360/n+f.r)*PI/180,d=dir(tm*PI/180*e,ph),l2=Math.sqrt(d[0]*d[0]+d[1]*d[1]),len=Math.max(l2,.3);
       var ws=1;
       if(l2>.08){var u0=d[0]/l2,u1=d[1]/l2;ws=.45+.55*Math.min(1,Math.abs(-Math.sin(ph)*u1+Math.cos(ph)*sb*u0));}
-      items.push([d[2],'<g transform="rotate('+f1(Math.atan2(d[0],d[1])*180/PI)+')scale(1 '+f1(len)+')">'+petal(h*sz*pk,w*sz*wf*ws*Math.max(.7,pk),ID+fill+f.c,0,tone(pc.d),wt)+'</g>']);
+      /* 排序键 = 花瓣中点的深度：方向深度 × 花瓣实际长度的一半；同一深度时内圈花瓣在外圈花瓣前面（rc 递增）。
+         这样长花瓣的尖端比短花瓣更靠前/靠后，不会被只看方向的排序弄反 */
+      items.push([d[2]*h*sz*pk*.5+(rc++)*.001,'<g transform="rotate('+f1(Math.atan2(d[0],d[1])*180/PI)+')scale(1 '+f1(len)+')">'+petal(h*sz*pk,w*sz*wf*ws*Math.max(.7,pk),ID+fill+f.c,0,tone(pc.d),wt)+'</g>']);
     }
   }
   function stam(n,r0,dr){
@@ -1541,7 +1543,7 @@ function bloom(f,o,bs,pk,wt){
     var k=clamp((o-.4)/.4,0,1);
     for(var j=0;j<n;j++){
       var L=(r0+(j%2)*dr)*k,d=dir(.3+.12*(j%2),(j*360/n+f.r)*PI/180),px=d[0]*L,py=-d[1]*L;
-      items.push([d[2]+sg,'<path d="M0 0L'+f1(px)+' '+f1(py)+'" stroke="'+tone(pc.d)+'" stroke-opacity=".6" stroke-width=".35"/><circle cx="'+f1(px)+'" cy="'+f1(py)+'" r=".85" fill="var(--bloomc)"/>']);
+      items.push([d[2]*L*.5+sg*3,'<path d="M0 0L'+f1(px)+' '+f1(py)+'" stroke="'+tone(pc.d)+'" stroke-opacity=".6" stroke-width=".35"/><circle cx="'+f1(px)+'" cy="'+f1(py)+'" r=".85" fill="var(--bloomc)"/>']);
     }
   }
   /* 花萼是一个整体，并且从底部接花梗：底部是花托杯（杯底宽度 = 花梗末端宽度，向后略伸进花梗里重叠），
@@ -1552,11 +1554,22 @@ function bloom(f,o,bs,pk,wt){
   var hw0=S.pw/2/(S.fs*f.sc)+.04,cr=Math.max(1.3*bs+.55,hw0*1.35),rimY=-.8;
   items.push([-9,'<path d="M'+f1(-hw0)+' 1.6C'+f1(-hw0)+' .3 '+f1(-cr)+' .1 '+f1(-cr)+' '+f1(rimY)+'Q0 '+f1(rimY-.9)+' '+f1(cr)+' '+f1(rimY)+'C'+f1(cr)+' .1 '+f1(hw0)+' .3 '+f1(hw0)+' 1.6Z" fill="url(#'+ID+'cup)"/>']);
   var petLen=12.5*sz*pk,Lbud=Math.max(2.4*bs+.8,petLen*(.78-.22*clamp((pk-.35)/.65,0,1))),Lopen=3.4*bs+.9;
-  var kk=Math.pow(e,.75),Ls=Lbud+(Lopen-Lbud)*kk,tilt=-7+112*kk;
+  var kk=Math.pow(e,.75),Ls=Lbud+(Lopen-Lbud)*kk,tilt=-7+112*kk,q=clamp(e/.3,0,1);
+  /* 花萼随花一起"展开"的动画（只由开放度 e 决定，连续）：
+     1) 后一对萼片：一直在花瓣后面，从略向内合拢，慢慢向外翻折、变短；
+     2) 前一对萼片：花苞时盖在花瓣前面把花苞兜住；花瓣刚顶开时（e<.3）它们先向两侧甩开、向下翻折并变短，
+        甩到花苞侧面、已经不再压在花瓣上时（q≥.55）才换到花瓣后面，所以换层时看不到跳变；
+     3) 花完全张开后：四枚萼片都是花瓣后面露出的小尖角，被花瓣盖住一部分 */
   [[-1,.8,0],[1,.8,0],[-1,.3,1],[1,.3,1]].forEach(function(sp){
-    var fr2=sp[2]===1,sdn=sp[0],ang=sdn*tilt*(fr2?.5:1),Lq=Ls*(fr2?(1-.35*kk):1);
-    var z=fr2?1.6-3.4*clamp(e/.3,0,1):-1.1;
-    items.push([z,'<g transform="translate('+f1(sdn*cr*sp[1])+' '+f1(rimY+.7)+')rotate('+f1(ang)+')">'+sepalPath(Lq,fr2)+'</g>']);
+    var fr2=sp[2]===1,sdn=sp[0],bx,by,ang,Lq,z;
+    if(!fr2){bx=sdn*cr*sp[1];by=rimY+.7;ang=sdn*tilt;Lq=Ls;z=-8;}
+    else{
+      bx=sdn*cr*(.3+.6*q);by=rimY+.7+1.1*q;
+      ang=sdn*(-4+132*q+12*clamp((e-.3)/.7,0,1));
+      Lq=(Lbud+(Lopen*.9-Lbud)*q)*(1-.0*q)*(e>.3?(1-.15*clamp((e-.3)/.7,0,1)):1);
+      z=q<.55?30:-7.5;
+    }
+    items.push([z,'<g transform="translate('+f1(bx)+' '+f1(by)+')rotate('+f1(ang)+')">'+sepalPath(Lq,fr2)+'</g>']);
   });
   if(key==='sakura'){
     if(v===0){ring(5,12.4,5,'petalb',36,86);ring(5,11,4.6,'petal',0,78);stam(9,5,1.5);}
@@ -1570,7 +1583,7 @@ function bloom(f,o,bs,pk,wt){
     if(v===0)ring(8,13,4.8,'petalb',22,90);
     else if(v===1){ring(8,13,4.6,'petalb',0,90);ring(8,11,4.2,'petal',22.5,86);}
     else ring(6,12,6,'petalb',0,90);
-    if(o>.5&&wt<.85)items.push([sb+sg,'<circle r="'+f1(3.4*e)+'" fill="var(--bloomc)"/><circle r="'+f1(1.8*e)+'" fill="#c98a1c"/>']);
+    if(o>.5&&wt<.85)items.push([sb*3+sg*3,'<circle r="'+f1(3.4*e)+'" fill="var(--bloomc)"/><circle r="'+f1(1.8*e)+'" fill="#c98a1c"/>']);
   }
   items.sort(function(p,q){return p[0]-q[0]});
   return items.map(function(i){return i[1]}).join('');
@@ -1606,6 +1619,9 @@ function stageName(prog,cnt,N){
 function draw(prog){var r=render(prog,{});svg.innerHTML=r.html;return r.info;}
 /* o.frag=只生成植物（无盆无土，供博物馆大花盆使用）；o.idp=id 前缀；o.season={open,alpha}=按季节控制花
    （open 0→1 对应花苞萌发→盛开，alpha 是花的整体不透明度，花谢时淡出） */
+var MH=2.1;
+/* 土面中间微微隆起 MH：土面椭圆的轮廓不变，隆起体现在中间更亮、靠花盆边缘更暗，以及根部、阴影、土粒都按隆起高度抬高 */
+function mhAt(x){return MH*Math.max(0,1-Math.pow((x-150)/51,2));}
 var FP='M0 0C-3 -1.6 -3.3 -6 0 -7.6C3.3 -6 3 -1.6 0 0Z',
 FALLCSS='<style>@keyframes pa-fall{0%{transform:translate(0,0) rotate(0);opacity:0}8%{opacity:1}30%{transform:translate(calc(var(--dx)*.55),calc(var(--dy)*.3)) rotate(calc(var(--rt)*.3))}60%{transform:translate(calc(var(--dx)*.35),calc(var(--dy)*.62)) rotate(calc(var(--rt)*.65))}88%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--rt));opacity:0}}.pa-fall{animation:pa-fall 3.6s linear infinite;transform-box:fill-box;transform-origin:center}@media (prefers-reduced-motion:reduce){.pa-fall{animation:none;opacity:0}}</style>';
 function render(prog,o){
@@ -1707,7 +1723,7 @@ function render(prog,o){
         fcols.push(it.f.c);
         /* 正在飘落的花瓣：从花的位置出发，一边旋转一边横向飘着落向土面，循环播放（错开相位，所以始终有花瓣在落） */
         for(var fi=0,nf=wl<.3?1:2;fi<nf;fi++){
-          var hh=paHash(Math.round(pe.x*10)*131+Math.round(pe.y*10)*7+fi*977+it.f.c),fdx=((hh%1000)/1000-.5)*34,fdy=Math.max(10,268.5-pe.y+((hh>>>10)%5)),frt=((hh>>>14)%2?1:-1)*(180+(hh>>>16)%160),fdu=2.4+fdy/55,fdl=-((hh>>>20)%1000)/1000*fdu;
+          var hh=paHash(Math.round(pe.x*10)*131+Math.round(pe.y*10)*7+fi*977+it.f.c),fdx=((hh%1000)/1000-.5)*34,fdy=Math.max(10,267.2-pe.y+((hh>>>10)%5)),frt=((hh>>>14)%2?1:-1)*(180+(hh>>>16)%160),fdu=2.4+fdy/55,fdl=-((hh>>>20)%1000)/1000*fdu;
           fall.push('<g transform="translate('+f1(pe.x)+' '+f1(pe.y)+')"><g class="pa-fall" style="--dx:'+f1(fdx)+'px;--dy:'+f1(fdy)+'px;--rt:'+frt+'deg;animation-duration:'+fdu.toFixed(2)+'s;animation-delay:'+fdl.toFixed(2)+'s"><path d="'+FP+'" fill="'+tone(S.pal[it.f.c].m)+'"/><path d="'+FP+'" fill="#8a6a45" opacity=".35"/></g></g>');
         }
       }
@@ -1730,7 +1746,7 @@ function render(prog,o){
    +'<linearGradient id="'+ID+'potm" gradientUnits="userSpaceOnUse" x1="0" y1="276" x2="0" y2="298"><stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>'
    +'<linearGradient id="'+ID+'rimsh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".2"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>'
    +'<radialGradient id="'+ID+'pacs"><stop offset="0" stop-color="#000" stop-opacity=".42"/><stop offset=".55" stop-color="#000" stop-opacity=".16"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>'
-   +'<radialGradient id="'+ID+'parc"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset=".5" stop-color="#000" stop-opacity=".26"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient><clipPath id="'+ID+'pasoil"><ellipse cx="150" cy="268.9" rx="51" ry="4.6"/></clipPath>'
+   +'<radialGradient id="'+ID+'parc"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset=".5" stop-color="#000" stop-opacity=".26"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient><radialGradient id="'+ID+'pamd" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".62" stop-color="#000" stop-opacity=".02"/><stop offset="1" stop-color="#000" stop-opacity=".34"/></radialGradient><radialGradient id="'+ID+'pamh" cx=".42" cy=".35" r=".6"><stop offset="0" stop-color="#d6ac80" stop-opacity=".6"/><stop offset=".55" stop-color="#b98c62" stop-opacity=".22"/><stop offset="1" stop-color="#b98c62" stop-opacity="0"/></radialGradient><clipPath id="'+ID+'pasoil"><ellipse cx="150" cy="268.9" rx="51" ry="4.6"/></clipPath>'
    +'<clipPath id="'+ID+'potclip"><path d="M99 278H201L191 312H109Z"/></clipPath>'
    +'<mask id="'+ID+'potmask" maskUnits="userSpaceOnUse" x="0" y="0" width="300" height="320"><rect width="300" height="320" fill="url(#'+ID+'potm)"/></mask></defs>'
    +'<g mask="url(#'+ID+'potmask)"><path d="M99 278H201L191 312H109Z" fill="url(#'+ID+'potg)"/>'
@@ -1741,27 +1757,29 @@ function render(prog,o){
    +'<ellipse cx="150" cy="268.5" rx="56.8" ry="6" fill="var(--potl)" opacity=".4"/>'
    +'<ellipse cx="150" cy="268.3" rx="52" ry="5.4" fill="var(--potd)"/></g>'
    +'<ellipse cx="150" cy="268.9" rx="51" ry="4.6" fill="var(--soil)"/>'
-   +'<g fill="#000" opacity=".22"><circle cx="124" cy="268.6" r=".9"/><circle cx="137" cy="270.4" r=".8"/><circle cx="165" cy="270" r=".9"/><circle cx="178" cy="267.8" r=".8"/></g>'
-   +'<g fill="#fff" opacity=".16"><circle cx="131" cy="267" r=".8"/><circle cx="158" cy="270.6" r=".7"/><circle cx="171" cy="268.2" r=".8"/></g>'
+   +'<ellipse cx="150" cy="268.9" rx="51" ry="4.6" fill="url(#'+ID+'pamd)"/>'
+   +'<ellipse cx="'+f1(148)+'" cy="'+f1(268.9-MH*.62)+'" rx="30" ry="'+f1(2.2+MH*.45)+'" fill="url(#'+ID+'pamh)"/>'
+   +'<g fill="#000" opacity=".22">'+[[124,268.6,.9],[137,270.4,.8],[165,270,.9],[178,267.8,.8]].map(function(c){return '<circle cx="'+c[0]+'" cy="'+f1(c[1]-mhAt(c[0]))+'" r="'+c[2]+'"/>';}).join('')+'</g>'
+   +'<g fill="#fff" opacity=".16">'+[[131,267,.8],[158,270.6,.7],[171,268.2,.8]].map(function(c){return '<circle cx="'+c[0]+'" cy="'+f1(c[1]-mhAt(c[0]))+'" r="'+c[2]+'"/>';}).join('')+'</g>'
    /* 土面光影（植物之下）：一片偏右下的柔和投影 + 根部一圈环境暗部。两者都被裁在土面椭圆内，随植株长大而变大 */
-   +'<g clip-path="url(#'+ID+'pasoil)"><ellipse cx="'+f1(151+sz*4)+'" cy="269.5" rx="'+f1(8+sz*24)+'" ry="'+f1(1.8+sz*1.9)+'" fill="url(#'+ID+'pacs)" opacity="'+f1(.4+sz*.35)+'"/>'
-   +(prog<SEED?'':'<ellipse cx="150" cy="269.2" rx="'+f1(S.rw*.9+7)+'" ry="2.7" fill="url(#'+ID+'pacs)" opacity=".6"/>')
+   +'<g clip-path="url(#'+ID+'pasoil)"><ellipse cx="'+f1(151+sz*4)+'" cy="'+f1(269.5-MH*.75)+'" rx="'+f1(8+sz*24)+'" ry="'+f1(1.8+sz*1.9)+'" fill="url(#'+ID+'pacs)" opacity="'+f1(.4+sz*.35)+'"/>'
+   +(prog<SEED?'':'<ellipse cx="150" cy="'+f1(269.2-MH)+'" rx="'+f1(S.rw*.9+7)+'" ry="2.7" fill="url(#'+ID+'pacs)" opacity=".6"/>')
    +'</g>'
-   +'<linearGradient id="'+ID+'paocc" gradientUnits="userSpaceOnUse" x1="0" y1="250" x2="0" y2="270.5"><stop offset="0" style="stop-color:var(--soil);stop-opacity:0"/><stop offset=".35" style="stop-color:var(--soil);stop-opacity:.3"/><stop offset=".7" style="stop-color:var(--soil);stop-opacity:.8"/><stop offset="1" style="stop-color:var(--soil);stop-opacity:1"/></linearGradient><linearGradient id="'+ID+'paocd" gradientUnits="userSpaceOnUse" x1="0" y1="256" x2="0" y2="271"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".6" stop-color="#000" stop-opacity=".16"/><stop offset="1" stop-color="#000" stop-opacity=".42"/></linearGradient>';
+   +'<linearGradient id="'+ID+'paocc" gradientUnits="userSpaceOnUse" x1="0" y1="'+f1(250-MH)+'" x2="0" y2="'+f1(270.5-MH)+'"><stop offset="0" style="stop-color:var(--soil);stop-opacity:0"/><stop offset=".35" style="stop-color:var(--soil);stop-opacity:.3"/><stop offset=".7" style="stop-color:var(--soil);stop-opacity:.8"/><stop offset="1" style="stop-color:var(--soil);stop-opacity:1"/></linearGradient><linearGradient id="'+ID+'paocd" gradientUnits="userSpaceOnUse" x1="0" y1="'+f1(256-MH)+'" x2="0" y2="'+f1(271-MH)+'"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".6" stop-color="#000" stop-opacity=".16"/><stop offset="1" stop-color="#000" stop-opacity=".42"/></linearGradient>';
   var pacsD='<radialGradient id="'+ID+'pacs"><stop offset="0" stop-color="#000" stop-opacity=".42"/><stop offset=".55" stop-color="#000" stop-opacity=".16"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>';
-  var paoccD='<linearGradient id=\"'+ID+'paocc\" gradientUnits=\"userSpaceOnUse\" x1=\"0\" y1=\"252\" x2=\"0\" y2=\"270.5\"><stop offset=\"0\" style=\"stop-color:var(--soil);stop-opacity:0\"/><stop offset=\".4\" style=\"stop-color:var(--soil);stop-opacity:.3\"/><stop offset=\".72\" style=\"stop-color:var(--soil);stop-opacity:.68\"/><stop offset=\"1\" style=\"stop-color:var(--soil);stop-opacity:.97\"/></linearGradient><linearGradient id=\"'+ID+'paocd\" gradientUnits=\"userSpaceOnUse\" x1=\"0\" y1=\"256\" x2=\"0\" y2=\"271\"><stop offset=\"0\" stop-color=\"#000\" stop-opacity=\"0\"/><stop offset=\".6\" stop-color=\"#000\" stop-opacity=\".16\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".42\"/></linearGradient>';
+  var paoccD='<linearGradient id=\"'+ID+'paocc\" gradientUnits=\"userSpaceOnUse\" x1=\"0\" y1=\"'+f1(252-MH)+'\" x2=\"0\" y2=\"'+f1(270.5-MH)+'\"><stop offset=\"0\" style=\"stop-color:var(--soil);stop-opacity:0\"/><stop offset=\".4\" style=\"stop-color:var(--soil);stop-opacity:.3\"/><stop offset=\".72\" style=\"stop-color:var(--soil);stop-opacity:.68\"/><stop offset=\"1\" style=\"stop-color:var(--soil);stop-opacity:.97\"/></linearGradient><linearGradient id=\"'+ID+'paocd\" gradientUnits=\"userSpaceOnUse\" x1=\"0\" y1=\"'+f1(256-MH)+'\" x2=\"0\" y2=\"'+f1(271-MH)+'\"><stop offset=\"0\" stop-color=\"#000\" stop-opacity=\"0\"/><stop offset=\".6\" stop-color=\"#000\" stop-opacity=\".16\"/><stop offset=\"1\" stop-color=\"#000\" stop-opacity=\".42\"/></linearGradient>';
   var parcD='<radialGradient id="'+ID+'parc"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset=".5" stop-color="#000" stop-opacity=".26"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>';
-  var fragBase='<defs>'+pg+pacsD+paoccD+parcD+'</defs>'+(prog<SEED?'':'<ellipse cx="'+f1(151+sz*5)+'" cy="272" rx="'+f1(10+sz*28)+'" ry="'+f1(2.4+sz*2.4)+'" fill="url(#'+ID+'pacs)" opacity="'+f1(.5+sz*.3)+'"/><ellipse cx="150" cy="272" rx="'+f1(S.rw*.9+7)+'" ry="3" fill="url(#'+ID+'pacs)" opacity=".6"/>');
+  var fragBase='<defs>'+pg+pacsD+paoccD+parcD+'</defs>'+(prog<SEED?'':'<ellipse cx="'+f1(151+sz*5)+'" cy="'+f1(272-MH)+'" rx="'+f1(10+sz*28)+'" ry="'+f1(2.4+sz*2.4)+'" fill="url(#'+ID+'pacs)" opacity="'+f1(.5+sz*.3)+'"/><ellipse cx="150" cy="'+f1(272-MH)+'" rx="'+f1(S.rw*.9+7)+'" ry="3" fill="url(#'+ID+'pacs)" opacity=".6"/>');
   var base=o.frag?fragBase:mainBase;
   var body,info={cnt:cnt,N:0};
   if(prog<SEED){
-    body='<ellipse cx="150" cy="267.8" rx="6" ry="4" fill="var(--soil)" stroke="var(--stem)" stroke-width="1.5"/>';
+    body='<ellipse cx="150" cy="'+f1(267.8-MH*.8)+'" rx="6" ry="4" fill="var(--soil)" stroke="var(--stem)" stroke-width="1.5"/>';
   }else{
     rb(tree.root,150,272.2,0,-1,99,sm,0);
     /* animation-delay 取负的当前相位：每帧重绘也不会让摇摆重新开始 */
     var ph=((((performance.now()-T0)/1000)+(o.phase||0))%10).toFixed(2);
     var occ=trunkDD?'<rect x="110" y="250" width="80" height="24" fill="url(#'+ID+'paocc)" clip-path="url(#'+ID+'pa-tc)"/><rect x="110" y="250" width="80" height="24" fill="url(#'+ID+'paocd)" clip-path="url(#'+ID+'pa-tc)"/>':'';
-    body='<defs>'+wg.join('')+(trunkDD?'<clipPath id="'+ID+'pa-tc"><path d="'+trunkDD+'"/></clipPath>':'')+'<clipPath id="'+ID+'pa-sc"><path d="M0 0H300V269.4H'+f1(150+S.rw*1.25+2)+'A'+f1(S.rw*1.25+2)+' 2.1 0 0 1 '+f1(150-S.rw*1.25-2)+' 269.4H0Z"/></clipPath></defs><g clip-path="url(#'+ID+'pa-sc)"><g class="pa-sway" style="animation-delay:-'+ph+'s">'+lb.join('')+sm0.join('')+sm.join('')+occ+lv.join('')+'<g opacity="'+al.toFixed(2)+'">'+fw.join('')+'</g>'+fall.join('')+'</g></g>';
+    body='<defs>'+wg.join('')+(trunkDD?'<clipPath id="'+ID+'pa-tc"><path d="'+trunkDD+'"/></clipPath>':'')+'<clipPath id="'+ID+'pa-sc"><path d="M0 0H300V'+f1(269.4-MH)+'H'+f1(150+S.rw*1.25+2)+'A'+f1(S.rw*1.25+2)+' 2.1 0 0 1 '+f1(150-S.rw*1.25-2)+' '+f1(269.4-MH)+'H0Z"/></clipPath></defs><g clip-path="url(#'+ID+'pa-sc)"><g class="pa-sway" style="animation-delay:-'+ph+'s">'+lb.join('')+sm0.join('')+sm.join('')+occ+lv.join('')+'<g opacity="'+al.toFixed(2)+'">'+fw.join('')+'</g>'+fall.join('')+'</g></g>';
   }
   /* 层次（后→前）：土面 → 投影与根部暗部（土面层，在植物之下）→ 植物（茎底按前缘弧线裁掉，像插进土里）
      → 茎根上一层很淡的暗化，只用来衔接，不再是浮在根部上方的一块阴影 */
@@ -1774,7 +1792,7 @@ function render(prog,o){
   if(wl>.04&&!o.frag&&fcols.length){
     var ns=Math.round(Math.min(16,3+tree.N*.7)*wl*1.15),so=wl<.7?1:1-(wl-.7)/.3;
     for(var qi=0;qi<ns;qi++){
-      var hq=paHash(qi*7919+tree.N*131+fcols.length*17),px2=150+((hq%1000)/1000-.5)*2*(14+wl*26),py2=267.9+((hq>>>10)%1000)/1000*2.8,cc=S.pal[fcols[hq%fcols.length]];
+      var hq=paHash(qi*7919+tree.N*131+fcols.length*17),px2=150+((hq%1000)/1000-.5)*2*(14+wl*26),py2=267.9+((hq>>>10)%1000)/1000*2.8-mhAt(px2),cc=S.pal[fcols[hq%fcols.length]];
       soilP+='<g transform="translate('+f1(px2)+' '+f1(py2)+')rotate('+(((hq>>>20)%70)-35)+')"><ellipse rx="2.2" ry=".85" fill="'+tone(cc.m)+'"/><ellipse rx="2.2" ry=".85" fill="#8a6a45" opacity=".35"/></g>';
     }
     if(soilP)soilP='<g opacity="'+f1(so)+'">'+soilP+'</g>';
@@ -1783,8 +1801,8 @@ function render(prog,o){
   var rootP='';
   if(prog>=SEED){
     var rpx=S.rw*1.25+2.6;
-    rootP=o.frag?'<ellipse cx="150" cy="270.4" rx="'+f1(rpx)+'" ry="1.9" fill="url(#'+ID+'parc)"/>'
-      :'<g clip-path="url(#'+ID+'pasoil)"><ellipse cx="150" cy="270.1" rx="'+f1(rpx)+'" ry="1.9" fill="url(#'+ID+'parc)"/></g>';
+    rootP=o.frag?'<ellipse cx="150" cy="'+f1(270.4-MH)+'" rx="'+f1(rpx)+'" ry="1.9" fill="url(#'+ID+'parc)"/>'
+      :'<g clip-path="url(#'+ID+'pasoil)"><ellipse cx="150" cy="'+f1(270.1-MH)+'" rx="'+f1(rpx)+'" ry="1.9" fill="url(#'+ID+'parc)"/></g>';
   }
   info.N=tree.N;info.name=stageName(prog,cnt,tree.N);
   return {html:(fall.length?FALLCSS:'')+base+soilP+body+rootP,info:info};
@@ -1876,7 +1894,7 @@ function ensureSpecies(){
   list.innerHTML='';
   SPECIES_INFO.forEach(sp=>{
     const b=document.createElement('button'); b.className='sp-opt'; b.type='button';
-    b.innerHTML=`<span class="ic">${sp.ic}</span><span><b>${tr(sp.name)}</b><small>${tr(sp.desc)}</small></span>`;
+    b.innerHTML=`<span><b>${tr(sp.name)}</b><small>${tr(sp.desc)}</small></span>`;
     b.onclick=()=>{
       try{ localStorage.setItem('poop_plant_species',JSON.stringify({g:gen,k:sp.k})); }catch(e){}
       pickerOpen=false; closeOv(ov); render();

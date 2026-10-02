@@ -162,10 +162,23 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
 .modal-close{display:block;margin:14px auto 0;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 18px;font-size:13px;color:var(--text);}
 .plantcard{text-align:center;background:linear-gradient(160deg,var(--card),var(--bg));position:relative;overflow:hidden;padding:22px 16px;}
 .plant-title{font-family:var(--serif);font-size:13px;color:var(--sub);letter-spacing:1px;margin-bottom:4px;}
-.plant-emoji{font-size:64px;line-height:1;display:inline-block;filter:saturate(1) grayscale(0);transition:filter .4s ease;}
-.plant-emoji.wilt{filter:saturate(.35) grayscale(.55);opacity:.75;}
-.plant-emoji.pop{animation:plantPop .5s ease;}
-@keyframes plantPop{0%{transform:scale(1);}35%{transform:scale(1.32) rotate(-4deg);}60%{transform:scale(.95);}100%{transform:scale(1);}}
+.plantart{--stem:#4a6b3a;--wood:#8a6a4a;--leaf1:#6f9f4a;--leaf2:#a3c45a;--leafd:#4c7d38;--bloomc:#e9b44c;--potd:#a9bda6;--potl:#dbe7d7;--soil:#7a5c43;--pot:#c9d8c5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .plantart{--stem:#7fa062;--wood:#a8845c;--leaf1:#8fbf5f;--leaf2:#c2de72;--leafd:#5f9546;--potd:#1a291f;--potl:#33503d;--soil:#6b5039;--pot:#223328}}
+:root[data-theme="dark"] .plantart{--stem:#7fa062;--wood:#a8845c;--leaf1:#8fbf5f;--leaf2:#c2de72;--leafd:#5f9546;--potd:#1a291f;--potl:#33503d;--soil:#6b5039;--pot:#223328}
+.plantart svg{width:100%;height:auto;display:block;transition:filter .6s ease}
+.pa-sway{transform-origin:150px 267.8px;animation:pa-sway 5s ease-in-out infinite alternate}
+.plantart.dormant .pa-sway{animation:none}
+.plantart.dormant svg{filter:saturate(.35) brightness(.95)}
+@keyframes pa-sway{from{transform:rotate(-1.2deg)}to{transform:rotate(1.2deg)}}
+@media (prefers-reduced-motion:reduce){.pa-sway{animation:none}}
+.plantart{max-width:300px;margin:0 auto 4px;}
+.plantart.pop{animation:plantPop .5s ease;}
+@keyframes plantPop{0%{transform:scale(1);}40%{transform:scale(1.035);}100%{transform:scale(1);}}
+#plantTitle{display:none;}
+.plantart.museum{max-width:none;margin:0;}
+.sp-opt{display:flex;align-items:center;gap:12px;width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px;text-align:left;font-size:14px;color:var(--text);cursor:pointer;}
+.sp-opt .ic{font-size:30px;line-height:1;}
+.sp-opt small{display:block;margin-top:2px;font-size:12px;color:var(--sub);}
 .plant-stage{font-family:var(--serif);font-weight:700;font-size:16px;margin-top:6px;color:var(--gold2);}
 .plant-kaomoji{font-size:14px;margin-top:4px;color:var(--accent2);letter-spacing:.5px;}
 .plant-note{font-size:12.5px;color:var(--sub);margin-top:6px;min-height:16px;}
@@ -194,9 +207,8 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
   <div class="page active" id="page-plant">
     <div class="card plantcard">
       <div class="plant-title" id="plantTitle"></div>
-      <div class="plant-emoji" id="plantEmoji">🌰</div>
+      <div class="plantart" id="plantArt"><svg id="plantSvg" viewBox="0 0 300 320" role="img" aria-label="随养分生长的植物"></svg></div>
       <div class="plant-feels"><span id="plantKaomoji"></span> <span id="plantMono" class="plant-mono"></span></div>
-      <div class="plant-note" id="plantNote">—</div>
       <div class="plant-evt" id="plantEvt"></div>
     </div>
     <div class="card">
@@ -205,13 +217,9 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
       <div class="nutri-legend"><span><i style="background:var(--accent2)"></i>已吸收</span><span><i style="background:var(--gold)"></i>吸收中</span><span><i style="background:var(--line)"></i>待补充</span></div>
       <div class="plant-pts" id="plantPts" style="margin-top:6px"></div>
     </div>
-    <div class="stat-row">
-      <div class="stat-box"><div class="num" id="plantWeekCnt">0</div><div class="lbl">本周施肥</div></div>
-      <div class="stat-box"><div class="num" id="plantStreakCnt">0</div><div class="lbl">连续天数</div></div>
-    </div>
     <div class="card" id="seedCard" style="display:none;text-align:center">
       <h2>🌰 它已经长成熟了</h2>
-      <div class="analysis" style="margin-bottom:10px">可以留种，开启它的下一段生命——新一代会继承这一代的一点偏好。</div>
+      <div class="analysis" style="margin-bottom:10px">可以留种，开启它的下一段生命——它会移栽到档案馆的大花盆里，新一代会继承这一代的一点偏好。</div>
       <button class="submit" id="btnSeed">留种，开启下一段</button>
     </div>
     <button class="submit" id="gotoFertBtn">🌾 去施肥</button>
@@ -225,17 +233,17 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
   </div></div>
 
   <div class="page" id="page-record">
-    <div class="hint">形状和状态选一下就能施肥，其余展开后再填～</div>
-    <div class="card"><h2>形状（布里斯托分类）</h2><div class="opts" id="opt-type"></div></div>
-    <div class="card"><h2>当时状态</h2><div class="opts" id="opt-mood"></div></div>
+    <div class="hint">选好便便的形状和当时的状态就能施肥，其余展开后再填～</div>
+    <div class="card"><h2>便便形状</h2><div class="opts" id="opt-type"></div></div>
+    <div class="card"><h2>拉便便时的状态</h2><div class="opts" id="opt-mood"></div></div>
     <button class="rowbtn" id="btnMoreFields"><span>展开更多细节</span><span class="chev" id="moreChev">▾</span></button>
     <div id="extraFields" style="display:none">
-      <div class="card"><h2>颜色</h2><div class="opts" id="opt-color"></div></div>
-      <div class="card"><h2>分量</h2><div class="opts" id="opt-size"></div></div>
-      <div class="card"><h2>气味</h2><div class="opts" id="opt-smell"></div></div>
-      <div class="card"><h2>用时</h2><div class="opts" id="opt-duration"></div></div>
-      <div class="card"><h2>地点</h2><div class="opts" id="opt-place"></div></div>
-      <div class="card"><h2>发生时间</h2><div class="timeRow"><input id="dateInput" type="date"><input id="timeOnlyInput" type="time"></div></div>
+      <div class="card"><h2>便便颜色</h2><div class="opts" id="opt-color"></div></div>
+      <div class="card"><h2>便便分量</h2><div class="opts" id="opt-size"></div></div>
+      <div class="card"><h2>便便气味</h2><div class="opts" id="opt-smell"></div></div>
+      <div class="card"><h2>拉便便用时</h2><div class="opts" id="opt-duration"></div></div>
+      <div class="card"><h2>拉便便地点</h2><div class="opts" id="opt-place"></div></div>
+      <div class="card"><h2>拉便便时间</h2><div class="timeRow"><input id="dateInput" type="date"><input id="timeOnlyInput" type="time"></div></div>
     </div>
     <button class="submit" id="btnSave">施肥</button>
     <div class="notebox"><button type="button" class="notelink" id="btnNoteToggle">✎ 给今天留句话？</button></div>
@@ -297,14 +305,14 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
   <div class="overlay" id="editOv"><div class="modal-box tall fixed" style="text-align:left">
     <div class="ttl" style="text-align:center">编辑记录</div>
     <div class="scroll">
-      <div class="card"><h2>形状（布里斯托分类）</h2><div class="opts" id="ed-type"></div></div>
-      <div class="card"><h2>当时状态</h2><div class="opts" id="ed-mood"></div></div>
-      <div class="card"><h2>颜色</h2><div class="opts" id="ed-color"></div></div>
-      <div class="card"><h2>分量</h2><div class="opts" id="ed-size"></div></div>
-      <div class="card"><h2>气味</h2><div class="opts" id="ed-smell"></div></div>
-      <div class="card"><h2>用时</h2><div class="opts" id="ed-duration"></div></div>
-      <div class="card"><h2>地点</h2><div class="opts" id="ed-place"></div></div>
-      <div class="card"><h2>发生时间</h2><div class="timeRow"><input id="edDate" type="date"><input id="edTime" type="time"></div></div>
+      <div class="card"><h2>便便形状</h2><div class="opts" id="ed-type"></div></div>
+      <div class="card"><h2>拉便便时的状态</h2><div class="opts" id="ed-mood"></div></div>
+      <div class="card"><h2>便便颜色</h2><div class="opts" id="ed-color"></div></div>
+      <div class="card"><h2>便便分量</h2><div class="opts" id="ed-size"></div></div>
+      <div class="card"><h2>便便气味</h2><div class="opts" id="ed-smell"></div></div>
+      <div class="card"><h2>拉便便用时</h2><div class="opts" id="ed-duration"></div></div>
+      <div class="card"><h2>拉便便地点</h2><div class="opts" id="ed-place"></div></div>
+      <div class="card"><h2>拉便便时间</h2><div class="timeRow"><input id="edDate" type="date"><input id="edTime" type="time"></div></div>
     </div>
     <div class="modal-btns"><button id="editCancel">取消</button><button class="primary" id="editSave">保存</button></div>
   </div></div>
@@ -345,6 +353,7 @@ textarea#importArea{width:100%;min-height:64px;border-radius:10px;border:1.5px s
 </div>
 
 <div class="overlay" id="dataOv"><div class="modal-box"><div class="ttl" id="dataTtl">数据</div><div class="msg" id="dataMsg"></div><button class="modal-close" id="dataClose">关闭</button></div></div>
+<div class="overlay" id="speciesOv"><div class="modal-box" style="text-align:left"><div class="ttl" style="text-align:center">挑一颗种子</div><div class="msg" style="text-align:center">选好之后这一代就不能换了，它会一直长到留种。</div><div id="spList"></div></div></div>
 <div class="overlay" id="toastOv"><div class="modal-box" id="toastBox"><div class="ttl" id="toastTtl"></div><div class="msg" id="toastMsg"></div><button class="modal-close" id="toastClose">关闭</button></div></div>
 <div class="overlay" id="dayOv"><div class="modal-box"><div class="ttl" id="dayTtl"></div><div class="msg" id="dayMsg"></div><button class="modal-close" id="dayClose">关闭</button></div></div>
 
@@ -354,6 +363,7 @@ let LANG=(function(){ try{ return localStorage.getItem('poop_plant_lang')==='en'
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const CJK=/[\u4e00-\u9fff]/;
 const EN={"夜里下了场雨，土壤喝饱了水，养分 +6": "It rained overnight and the soil drank its fill. Nutrients +6", "一场急雨路过，叶片上挂满水珠，养分 +5": "A sudden shower passed, leaving droplets on every leaf. Nutrients +5", "太久没下雨，叶尖有点发卷，养分 -3": "No rain for too long — the leaf tips are curling. Nutrients -3", "连着大晴天，土壤有点发干，养分 -2": "Days of clear sun have dried the soil out a bit. Nutrients -2", "一只瓢虫路过，顺手松了松土，养分 +3": "A ladybug passed by and loosened the soil on the way. Nutrients +3", "一只麻雀落下来歇脚，啄走了几只害虫，养分 +4": "A sparrow stopped to rest and pecked off a few pests. Nutrients +4", "一只粉蝶在叶子上待了很久才飞走，养分 +2": "A cabbage white butterfly lingered on a leaf for a long while. Nutrients +2", "被一只洋辣子啃了一口叶子，有点疼，养分 -3": "A stinging caterpillar took a bite of a leaf. Ouch. Nutrients -3", "一队蚂蚁搬家路过，顺走了点养分，养分 -2": "A column of ants moving house helped themselves to some nutrients. Nutrients -2", "一阵大风吹歪了枝条，养分 -4": "A strong gust bent a branch. Nutrients -4", "飘来了一粒蒲公英种子，卡在叶片间，痒痒的": "A dandelion seed drifted in and got stuck between the leaves. Tickles!", "不知哪来的塑料袋缠上了枝干，有点不透气，养分 -2": "A plastic bag from who-knows-where wrapped around a branch. Hard to breathe. Nutrients -2", "一只喜鹊落在旁边看了很久，什么也没做就飞走了": "A magpie perched nearby, watched for ages, then flew off without doing a thing", "一只蜗牛慢悠悠爬过，留下一道亮晶晶的痕迹，养分 +2": "A snail crawled by slowly, leaving a shiny trail. Nutrients +2", "隔壁的一片梧桐叶飘过来，正好盖在了旁边": "A plane-tree leaf from next door drifted over and landed right beside it", "路过的人随手给浇了口矿泉水，养分 +3": "A passer-by casually poured some bottled water on it. Nutrients +3", "一只松鼠好奇地扒了扒盆土，养分 -1": "A squirrel curiously dug around in the pot. Nutrients -1", "一根羽毛不知从哪飘落，轻轻搭在叶尖上": "A feather floated down from somewhere and rested on a leaf tip", "阳光晒在叶片上，暖暖的": "Sunlight on my leaves, nice and warm", "{n}的根须在土里悄悄往下探了探": "{n} felt its roots creep a little deeper into the soil", "有点渴，但还撑得住": "A bit thirsty, but holding on", "光合作用进行中，别打扰": "Photosynthesizing — do not disturb", "{n}觉得叶脉里好像又饱满了一点": "{n} feels like its leaf veins got a little plumper", "风吹过，顺便抖了抖灰尘": "A breeze passed by — shook off some dust while I was at it", "土壤的温度刚刚好": "The soil is just the right temperature", "{n}看见你又对着屏幕叹气了，是遇到难题了吗": "{n} saw you sighing at the screen again — hit a tough problem?", "{n}听见窗外的车声比昨天多了些": "{n} noticed more cars outside the window than yesterday", "{n}听见你在自言自语，在练习什么吗": "{n} heard you muttering to yourself — practicing something?", "{n}发现桌上的水杯好像空了很久了": "{n} noticed your water glass has been empty for a while", "{n}看你换了个姿势坐着，是不是没休息好": "{n} watched you shift in your seat — didn’t sleep well?", "夜里气孔慢慢合上了": "My stomata are slowly closing for the night", "{n}的根在黑暗里也没闲着": "{n} keeps its roots busy even in the dark", "叶片上凝了一层薄薄的露水": "A thin layer of dew has formed on my leaves", "正安静地进行呼吸作用": "Quietly respiring", "月光洒下来，凉凉的": "Moonlight falls, cool and calm", "把今天吸收的养分悄悄存好了": "Quietly stored away today’s nutrients", "夜风一吹，叶尖轻轻晃了晃": "A night breeze — my leaf tips swayed gently", "{n}看你这个点了还在忙，注意休息": "{n} sees you’re still busy at this hour — get some rest", "{n}好像听见隔壁传来电视的声音": "{n} thinks it can hear a TV from next door", "窗外静悄悄的，{n}只听得见你的键盘声": "It’s quiet outside — all {n} can hear is your keyboard", "{n}看着台灯的光把影子拉得好长": "{n} watches the desk lamp stretch its shadow long", "{n}感受到了你的目光，晒了会儿太阳": "{n} felt your gaze and soaked up a bit of sun", "被看着的感觉，{n}好像长得更起劲了": "Being watched, {n} seems to grow with more gusto", "夜里被你陪着，{n}吸了点夜间的二氧化碳": "Kept company by you tonight, {n} breathed in some night-time CO₂", "安静地被注视着，也挺好": "Being quietly watched is nice too", "这形态该裱起来": "This shape deserves framing", "教科书级发挥，给自己点个赞": "Textbook performance — give yourself a thumbs-up", "状态在线，继续保持": "In great form — keep it up", "这是今天最舒服的几分钟吧": "Probably the most comfortable minutes of your day", "稳，绝对的稳": "Steady. Absolutely steady", "辛苦了，抱一个": "Well done — here’s a hug", "难受也记下来了，这份坚持不容易": "Even the rough ones got recorded — that persistence isn’t easy", "不舒服的话记得多喝点水": "If you feel off, remember to drink more water", "这局是硬仗，你打赢了": "That was a tough one, and you won", "难受归难受，至少过去了": "Rough as it was, at least it’s over", "粪堆已经堆到盆沿了，今天先别加了，有点臭": "The pile has reached the rim of the pot — hold off for today, it’s getting smelly", "土壤已经吃撑了，明天再喂吧": "The soil is stuffed — feed it again tomorrow", "再施肥植物要被熏晕了，先歇会儿": "Any more and the plant will be knocked out by the smell — take a break", "肥料堆成小山了，暂时消化不动了": "The fertilizer is piled up like a hill — it can’t digest any more for now", "今天的份额已经满了，克制一下～": "Today’s share is full — a little restraint~", "吃饱啦": "Full!", "很满足": "So satisfied", "谢谢投喂": "Thanks for the meal", "消化中，先这样": "Digesting… that’s all for now", "收到，谢谢": "Got it, thanks", "这顿不错": "Nice meal", "知道啦": "Got it", "一颗饱满的种子": "A plump seed", "半透明的果实": "A translucent fruit", "一片风干的落叶": "A wind-dried fallen leaf", "一段带着芽点的枝条": "A twig with a budding node", "一撮带着草木香的土": "A pinch of earth that smells of green things", "一缕卷曲的须根": "A curled little rootlet", "干货肥": "Dry fertilizer", "羊球状偏干，肥效温和": "Dry pellets, gentle effect", "扎实肥": "Solid fertilizer", "偏硬但扎实，稳步吸收": "Firm but solid, absorbed steadily", "标准肥": "Standard fertilizer", "营养均衡，正常发挥": "Balanced nutrition, working as it should", "黄金肥": "Golden fertilizer", "完美形态！植物馋这口很久了": "Perfect form! The plant has craved this for ages", "湿润肥": "Moist fertilizer", "偏软易吸收，肥效不错": "Soft and easy to absorb — nicely effective", "稀释肥": "Diluted fertilizer", "糊状偏稀，勉强吸收一点": "A bit runny — only barely absorbed", "速溶肥": "Instant fertilizer", "水状冲得快，肥力被稀释了": "Watery and washed away — the strength got diluted", "第一片真叶": "First True Leaf", "{name}长出了第一片像样的叶子，都是你的功劳。": "{name} grew its first proper leaf — all thanks to you.", "扎根期": "Putting Down Roots", "根须稳稳扎进土里了，{name}开始有点脾气了。": "Its roots are firmly in the soil, and {name} is starting to show some attitude.", "舒展": "Stretching Out", "{name}第一次把叶子完全展开，像是伸了个懒腰。": "{name} fully unfurled its leaves for the first time, like a good long stretch.", "一起满月": "A Full Moon Together", "陪{name}这么久，它已经记住你的味道了。": "After all this time with {name}, it remembers your scent.", "百日之约": "A Hundred-Day Promise", "这份坚持，{name}都看在眼里。": "This persistence — {name} sees it all.", "枝叶扶疏": "Lush Branches", "{name}的影子已经遮住小半盆土了。": "{name}’s shadow now covers half the pot.", "一岁啦": "One Year Old!", "陪{name}走到这里，它想跟你说声谢谢。": "Having come this far with {name}, it wants to say thank you.", "并肩成林": "Side by Side", "{name}这一路长成的样子，全靠你没有放弃。": "How {name} has grown is all thanks to you never giving up.", "{name}爱你": "{name} loves you", "这么久的坚持，{name}把这句话悄悄种进了叶脉里。": "After all this time, {name} quietly planted those words into its leaf veins.", "岁月共生": "Growing Old Together", "和{name}一起走过这么久，早就分不清谁在陪谁了。": "After walking this long with {name}, it’s hard to tell who’s keeping whom company.", "与你共生": "Life Together", "{name}早就不只是一株植物，是你日子里的一部分。": "{name} is no longer just a plant — it’s part of your days.", "拉屎大王": "King of Poop", "一万次，当之无愧的拉屎大王，{name}向你鞠躬。": "Ten thousand times — a truly deserving King of Poop. {name} bows to you.", "第一次发芽": "First Sprout", "植物发芽了，是你亲手养出来的。": "It sprouted — and you raised it yourself.", "长出新叶": "New Leaves", "长叶了，肥料没白施。": "Leaves at last — the fertilizer wasn’t wasted.", "第一次开花": "First Bloom", "开花了，值得凑近闻一下。": "It bloomed. Worth leaning in for a sniff.", "长成大树": "Grown Tree", "长成了一棵树，堪称传奇级坚持。": "It grew into a tree — legendary persistence.", "有了名字": "Given a Name", "植物终于有名字了，不再是\"那个东西\"。": "Your plant finally has a name and is no longer “that thing”.", "完整的一生": "A Full Life", "一株植物完整地陪你走完了一生。": "A whole plant lived out its life alongside you.", "传承三代": "Three Generations", "植物换了一轮又一轮，陪伴没有换。": "The plants keep changing; the companionship doesn’t.", "第一次记录": "First record", "万事开头难，你已经迈出第一步。": "The first step is the hardest — and you’ve taken it.", "慢慢养成习惯": "Getting Into It", "两位数了，稳步前进中。": "Double digits — steady progress.", "并肩五十次": "Fifty Together", "半百纪录，经验丰富了。": "Half a hundred — you’re getting experienced.", "连续三天": "Three in a Row", "三天不断，习惯正在养成。": "Three days straight — a habit is forming.", "陪伴一周": "A Week Together", "一周无间断，规律生活典范。": "A full week without a break — a model of regularity.", "陪伴满月": "A Full Month Together", "整整一个月，值得为自己鼓掌。": "A whole month — give yourself a round of applause.", "状态在线": "In Top Form", "五次完美形态，堪称典范。": "Five perfect shapes — a true role model.", "扛过了难受的日子": "Got Through the Rough Days", "再难的时刻你都挺过来了。": "You made it through even the hardest moments.", "羊球状": "Pellets", "香肠块状": "Lumpy sausage", "带裂纹": "Cracked sausage", "光滑香肠": "Smooth sausage", "软块状": "Soft blobs", "糊状": "Mushy", "水状": "Watery", "硬块,便秘": "Hard lumps, constipation", "偏硬": "Firm", "正常": "Normal", "完美": "Perfect", "偏软": "Soft", "较稀": "Loose", "腹泻": "Diarrhea", "棕色": "Brown", "黄色": "Yellow", "深褐": "Dark brown", "绿色": "Green", "黑色": "Black", "偏红": "Reddish", "橙色": "Orange", "灰白": "Pale gray", "迷你": "Mini", "小": "Small", "中": "Medium", "大": "Large", "超大": "Huge", "无味": "Odorless", "若隐若现": "Faint", "有味道": "Noticeable", "浓烈": "Strong", "爆炸级": "Explosive", "生化警报": "Biohazard", "轻松愉悦": "Relaxed & happy", "畅快淋漓": "Exhilarating", "平平无奇": "Uneventful", "有点费力": "A bit of effort", "非常痛苦": "Very painful", "意犹未尽": "Not quite done", "如释重负": "Relieved", "灵魂出窍": "Out-of-body", "恍如新生": "Reborn", "<1分钟": "<1 min", "1-3分钟": "1–3 min", "3-8分钟": "3–8 min", "8-15分钟": "8–15 min", "15-30分钟": "15–30 min", "30分钟-1小时": "30 min–1 hr", "1小时以上": "Over 1 hr", "家里": "Home", "公司": "Office", "学校": "School", "宿舍": "Dorm", "商场厕所": "Mall restroom", "公共厕所": "Public restroom", "野外": "Outdoors", "高铁": "High-speed train", "飞机": "Plane", "朋友家": "Friend’s place", "酒店": "Hotel", "日": "Sun", "一": "Mon", "二": "Tue", "三": "Wed", "四": "Thu", "五": "Fri", "六": "Sat", "种子期": "Seed Stage", "发芽": "Sprout Stage", "抽枝": "Branching Stage", "长叶": "Leaf Stage", "开花": "Bloom Stage", "结果": "Fruit Stage", "参天大树": "Towering Tree", "植物": "Plant", "施肥": "Fertilize", "足迹": "Trail", "我的": "Me", "已吸收": "Absorbed", "吸收中": "Absorbing", "待补充": "To go", "本周施肥": "This week", "连续天数": "Day streak", "🌰 它已经长成熟了": "🌰 It has fully matured", "可以留种，开启它的下一段生命——新一代会继承这一代的一点偏好。": "Collect its seeds to begin its next life — the next generation inherits a little of this one’s taste.", "留种，开启下一段": "Collect seeds & start anew", "🌾 去施肥": "🌾 Go fertilize", "📖 植物档案馆": "📖 Plant Archive", "植物档案馆": "Plant Archive", "还没有留种记录": "No seed records yet", "关闭": "Close", "形状和状态选一下就能施肥，其余展开后再填～": "Pick a shape and a mood and you can fertilize — fill in the rest if you like~", "形状（布里斯托分类）": "Shape (Bristol scale)", "当时状态": "How it felt", "展开更多细节": "Show more details", "颜色": "Color", "分量": "Amount", "气味": "Smell", "用时": "Time spent", "地点": "Place", "发生时间": "When", "✎ 给今天留句话？": "✎ Leave a line for today?", "便便情报": "Poop Report", "暂无便便记录，快去记录一次吧～": "No records yet — go log one!", "✦ 有便便记录的日子会留下痕迹，点开日期可查看当天详情": "✦ Days with records leave a mark — tap a date for details", "本月": "This month", "本年": "This year", "🔍 看看留下了什么": "🔍 See what you’ve left behind", "天的共同生活": "days living together", "脚印": "Footprints", "里程碑": "Milestones", "未解锁的里程碑保持神秘，达成后才会揭晓～": "Locked milestones stay a mystery until you reach them~", "⚙ 设置": "⚙ Settings", "💩 历史便便记录": "💩 Poop History", "📝 留下的话": "📝 Lines I Left", "数据管理": "Data", "导出": "Export", "导入": "Import", "清空数据": "Clear data", "设置": "Settings", "你的称呼": "Your name", "给自己起个昵称吧": "Give yourself a nickname", "给植物取名": "Name your plant", "它还没有名字": "No name yet", "互动语气": "Tone", "温和": "Gentle", "日常": "Casual", "浮夸": "Over the top", "网页图标": "Page icon", "填一个 emoji 作为网页图标，留空则使用默认图标": "Enter an emoji to use as the page icon; leave blank for the default", "历史便便记录": "Poop History", "还没有记录": "No records yet", "留下的话": "Lines I Left", "给今天留句话": "Leave a line for today", "今天想说点什么…": "What would you like to say today…", "取消": "Cancel", "保存": "Save", "看看留下了什么": "See what you’ve left behind", "数据": "Data", "编辑": "Edit", "删除": "Delete", "还没有留下过话。记录便便时，点下方的「给今天留句话？」就会出现在这里": "Nothing here yet. Tap “Leave a line for today?” under the Fertilize button and it will show up here.", "还没有便便记录，先去记录一次吧": "No records yet — go log one first", "达成日期": "Date achieved", "当天发生的事": "What happened that day", "这天没有便便记录": "No poop records on that day", "这一天还没有记录。": "Nothing recorded on this day.", "记录概览": "Overview", "累计便便次数": "Total records", "记录天数": "Days recorded", "最近一次记录": "Latest record", "我的习惯": "My habits", "最常见形状": "Most common shape", "最常出现时间": "Most common time", "最常出现地点": "Most common place", "最常见心情": "Most common mood", "最长连续记录": "Longest streak", "最长空档": "Longest gap", "导出数据": "Export data", "导出为文件": "Export to file", "复制到剪贴板": "Copy to clipboard", "导入数据": "Import data", "选择文件导入": "Choose a file to import", "或将导出的内容粘贴到这里": "Or paste the exported content here", "粘贴内容导入": "Import pasted content", "已复制到剪贴板": "Copied to clipboard", "复制失败，可尝试\"导出为文件\"": "Copy failed — try “Export to file”", "导入成功！": "Import successful!", "导入失败，请检查内容格式是否正确": "Import failed — please check the format", "确定要清空所有本地数据吗？此操作不可恢复。": "Clear all local data? This cannot be undone.", "删除这句话？": "Delete this line?", "至少选一下形状吧": "Please pick a shape at least", "留种会让当前这株植物的养分归零，重新开始新一代。它的记录会保留在档案馆里，确定吗？": "Collecting seeds will reset this plant’s nutrients and start a new generation. Its record stays in the archive. Continue?", "🌾 施肥完成": "🌾 Fertilized!", "好的，继续": "OK, continue", "🌱 新的生命开始了": "🌱 A new life begins", "这几天的植物纪事": "Plant news these past days", "植物纪事": "Plant news", "✦ 解锁里程碑": "✦ Milestone unlocked", "🏅 解锁新足迹": "🏅 New footprint unlocked", "已经满了 💩": "Full already 💩", "+1 呼吸感应": "+1 felt your presence", "新一代是一张白纸，从头开始": "The new generation is a blank slate — starting fresh", "天生偏爱这味": "a natural favorite", "还没施过肥，快去记录第一次便便吧": "No fertilizer yet — go log your first poop!", "今天已经施肥，长势喜人": "Fertilized today — growing nicely", "昨天施过肥，还算滋润": "Fertilized yesterday — still fairly well-fed", "还没发生过随机事件": "No random events yet", "还没有第一次记录": "No first record yet", "（还没取名字，去\"我的\"页起一个吧）": "(No name yet — give it one on the “Me” page)", "刚刚": "just now", "最近7天<b>还没有记录</b>，记得留意身体信号。": "Nothing logged in the last 7 days — keep an eye on your body’s signals.", "最近<b>偏硬型</b>占比较高，可能轻度便秘，建议增加水分与蔬果摄入。": "Lately <b>firm types</b> make up a large share — possibly mild constipation. Try more water, fruit and vegetables.", "最近<b>偏稀型</b>占比较高，注意饮食卫生，持续请留意身体状况。": "Lately <b>loose types</b> make up a large share — mind food hygiene, and keep an eye on how you feel if it continues.", "大部分记录都在<b>理想形态</b>，消化系统状态不错。": "Most records are in the <b>ideal range</b> — your digestion looks good.", "最近\"费力/痛苦\"记录较多，注意别太紧张，放松心态更顺畅。": "Lately there are quite a few “effortful / painful” records — try not to tense up; relaxing helps.", "继续记录便便，留下更多脚印～": "Keep logging and leave more footprints~", "今天还没有记录，你的日均是": "You haven't logged anything today. Your daily average is", "次。": "per day.", "今天已记录": "You've logged", "次，高于日均": "times today, above your average of", "次，如伴随不适建议关注饮食。": "times. If you feel unwell, keep an eye on your diet.", "次，日均为": "times today; your average is", "次，状态正常。": "times — looking normal.", "最近7天": "In the last 7 days ", "，记得留意身体信号。": ", remember to watch your body's signals.", "最近7天只记录了": "Only logged ", "，频率偏低，注意多喝水、多吃膳食纤维。": " in the last 7 days — on the low side. Drink more water and eat more fiber.", "最近7天记录了": "Logged ", "，频率偏高，如伴随不适建议关注饮食。": " in the last 7 days — on the high side. If you feel unwell, keep an eye on your diet.", "最近7天记录": "Logged ", "，频率在健康区间内（每周3~21次）。": " in the last 7 days — within the healthy range (3–21 per week).", "最近": "Lately ", "偏硬型": "firm types", "占比较高，可能轻度便秘，建议增加水分与蔬果摄入。": " make up a large share — possibly mild constipation. Try more water, fruit and vegetables.", "偏稀型": "loose types", "占比较高，注意饮食卫生，持续请留意身体状况。": " make up a large share — mind food hygiene, and keep an eye on how you feel if it continues.", "大部分记录都在": "Most records are in the ", "理想形态": "ideal range", "，消化系统状态不错。": " — your digestion looks good.", "月度回望": "Monthly Look-Back", "年度回望": "Yearly Look-Back", "阳春无不长成，草木群类，随大风起。": "In bright spring nothing fails to grow; all the grasses and trees rise on the great wind.", "阳春布德泽，万物生光辉。": "Spring spreads its kindness, and all things begin to shine.", "迟日江山丽，春风花草香。": "In the lengthening days the rivers and hills are fair; the spring breeze is sweet with flowers and grass.", "芳林新叶催陈叶，流水前波让后波。": "In the fragrant grove new leaves urge on the old; in the flowing stream the waves ahead make way for those behind.", "沾衣欲湿杏花雨，吹面不寒杨柳风。": "Apricot-blossom rain that barely wets the sleeve; willow breeze that never chills the face.", "池塘生春草，园柳变鸣禽。": "Spring grass grows by the pond; in the garden willows the songbirds have changed.", "东风动百物，草木尽欲言。": "The east wind stirs all things; every grass and tree seems about to speak.", "草堂春睡足，窗外日迟迟。": "Slept my fill in the thatched hall this spring; outside the window the sun moves slowly.", "去年桥下春波绿，曾是惊鸿照影来。": "Last spring the water under the bridge was green; a startled swan once came, mirrored in it.", "锦水有鸳，汉宫有木。": "The brocade river has its mandarin ducks; the Han palace has its trees.", "漠漠水田飞白鹭，阴阴夏木啭黄鹂。": "Over the misty paddies white egrets fly; in the deep summer shade orioles sing.", "当待春中，草木蔓发，春山可望。": "Wait until mid-spring, when grass and trees spread and the spring hills can be seen.", "春日迟迟，卉木萋萋。": "The spring days are long; the plants and trees grow lush.", "{n}把叶子朝着窗口转了转": "{n} turned its leaves toward the window", "{n}闻到了隔壁飘来的饭菜香": "{n} caught the smell of cooking from next door", "一朵云飘过，{n}的影子也跟着淡了淡": "A cloud drifted by, and {n}'s shadow faded with it", "{n}悄悄数了数今天的阳光，还挺多的": "{n} quietly counted today's sunlight, and there was plenty", "土有点干，{n}想着你会不会记得": "The soil is a bit dry, and {n} wonders if you'll remember", "{n}听到楼下有小孩在跑，很热闹": "{n} heard children running downstairs, all lively", "{n}觉得今天的风带着点甜味": "{n} thinks today's breeze tastes a little sweet", "{n}看着你端着杯子走来走去": "{n} watched you pace around with a cup in hand", "一只小飞虫在{n}的叶子上停了停": "A tiny fly rested on {n}'s leaf for a moment", "{n}的叶尖沾了点灰，也懒得抖": "{n} has a bit of dust on its leaf tip and can't be bothered to shake it off", "{n}在午后的光里打了个盹": "{n} dozed off in the afternoon light", "{n}猜你今天是不是又没好好吃饭": "{n} wonders if you skipped a proper meal again today", "{n}听见远处有车慢慢驶过": "{n} heard a car slowly pass in the distance", "{n}看着窗外的灯一盏盏暗下去": "{n} watched the lights outside go out one by one", "夜很深，{n}也不困，就静静待着": "It's deep in the night; {n} isn't sleepy and just stays quiet", "{n}闻到了夜里泥土返上来的潮气": "{n} smelled the damp rising from the soil at night", "{n}听见你叹了口气，不知该怎么安慰": "{n} heard you sigh and didn't know how to comfort you", "远处传来几声狗叫，{n}抖了一下叶子": "A few barks came from far away, and {n} shivered its leaves", "{n}把白天的阳光在心里又过了一遍": "{n} replayed the day's sunlight once more in its mind", "{n}觉得今晚的月亮有点圆": "{n} thinks tonight's moon looks rather round", "手机屏幕亮了一下，{n}的叶子上映出一小块光": "A phone screen lit up, and a small patch of light fell on {n}'s leaf", "{n}在夜里悄悄长了一点点": "{n} quietly grew a tiny bit in the night", "{n}还埋在土里，只听得见外面隐约的动静": "{n} is still under the soil, hearing only faint sounds from outside", "{n}攒着劲，等着哪天顶开土壳": "{n} is saving its strength, waiting for the day it pushes through the shell", "土里黑漆漆的，{n}也不着急": "It's pitch dark in the soil, but {n} is in no hurry", "{n}在壳里翻了个身，还没睡醒": "{n} rolled over inside its shell, still half asleep", "{n}探出了两片嫩叶，什么都觉得新鲜": "{n} pushed out two tender leaves and finds everything new", "{n}试着朝有光的那边歪了歪身子": "{n} tried leaning toward the side where the light is", "刚冒头的{n}被风吓了一跳，又慢慢站稳了": "Just sprouted, {n} was startled by the wind, then steadied itself", "{n}数了数自己的叶子，一共两片，够用了": "{n} counted its leaves: two, and that's enough", "{n}又往外抽了一小节枝条，像在伸懒腰": "{n} stretched out a little more branch, like a lazy stretch", "{n}的枝条够到了窗台边上的光": "{n}'s branches have reached the light by the windowsill", "{n}觉得自己长高了一点，不过没人量过": "{n} feels a little taller, though no one has measured", "一根新枝从{n}身上冒出来，还带着点绒毛": "A new branch came out of {n}, still a bit fuzzy", "{n}的叶子一天比一天密，风一吹哗啦啦响": "{n}'s leaves grow denser each day and rustle whenever the wind blows", "{n}把叶子舒展开，接住路过的阳光": "{n} spread its leaves wide to catch the passing sunlight", "雨点落在{n}的叶面上，滚成一颗颗小珠子": "Raindrops landed on {n}'s leaves and rolled into little beads", "{n}的叶子多了，影子也跟着大了一圈": "With more leaves, {n}'s shadow has grown a size larger", "{n}的花苞悄悄鼓起来了，谁也没告诉": "{n}'s buds have quietly swelled, and it hasn't told anyone", "{n}开了花，蜜蜂来打过一次招呼": "{n} bloomed, and a bee stopped by to say hello", "有花瓣落在土上，{n}也不心疼": "A petal fell onto the soil, and {n} doesn't mind at all", "{n}闻了闻自己的花，觉得还不错": "{n} smelled its own flowers and thought they were pretty good", "{n}的枝头坠着果子，有点沉": "Fruit hangs from {n}'s branches, a little heavy", "{n}小心地护着刚长出的果子": "{n} carefully shields its newly grown fruit", "果子一天天变大，{n}的腰也弯了些": "The fruit grows bigger each day, and {n} bends a little more", "{n}想着这些果子里的种子，会去哪儿呢": "{n} wonders where the seeds in these fruits will end up", "{n}站得很高，能看见很远的地方": "{n} stands tall and can see far into the distance", "{n}的树荫下，有只小虫睡着了": "A little bug fell asleep in {n}'s shade", "{n}看着周围一切慢慢变化，不着急说什么": "{n} watches everything around it change slowly, in no rush to say anything", "风从{n}的枝叶间穿过，说了很久的话": "The wind passed through {n}'s branches and talked for a long while", "路过的风带来一阵薄雾，叶子喝了个够，养分 +3": "A passing breeze brought a light mist and the leaves drank their fill. Nutrients +3", "一只蜜蜂嗡嗡地转了两圈，养分 +2": "A bee buzzed around twice. Nutrients +2", "一只蚜虫爬到了嫩叶上，养分 -2": "An aphid crawled onto a young leaf. Nutrients -2", "半夜有猫从旁边跳过，碰歪了盆，养分 -1": "A cat leapt past in the night and knocked the pot askew. Nutrients -1", "一片云遮住了太阳，叶子凉快了一会儿": "A cloud covered the sun and the leaves cooled off for a while", "有人在旁边浇了水，还顺手擦了擦叶子，养分 +4": "Someone watered it and wiped the leaves while they were at it. Nutrients +4", "一只蜻蜓停在枝头，翅膀在光下一闪一闪": "A dragonfly landed on a branch, its wings flickering in the light", "落下几片枯叶，正好盖成了小小的护根层，养分 +1": "A few dead leaves fell and formed a small cover over the roots. Nutrients +1", "刚开始记录，再积累几天就能看出规律了。": "You have just started logging. A few more days and a pattern will show.", "不能记录未来的时间哦": "You can't log a time in the future.", "编辑记录": "Edit entry"};
+Object.assign(EN,{"便便形状":"Poop shape","拉便便时的状态":"How the poop felt","便便颜色":"Poop color","便便分量":"Poop amount","便便气味":"Poop smell","拉便便用时":"Time on the toilet","拉便便地点":"Where you pooped","拉便便时间":"When you pooped","选好便便的形状和当时的状态就能施肥，其余展开后再填～":"Pick the poop shape and how it felt and you can fertilize — fill in the rest later~","至少选一下便便形状吧":"Please pick a poop shape at least","最常见的便便形状":"Most common poop shape","羊粪球便":"Sheep-pellet poop","结块香肠便":"Lumpy sausage poop","裂纹香肠便":"Cracked sausage poop","光滑香肠便":"Smooth sausage poop","软块便":"Soft-blob poop","糊糊便":"Mushy poop","水样便":"Watery poop","挑一颗种子":"Pick a seed","选好之后这一代就不能换了，它会一直长到留种。":"Once chosen, this generation cannot be changed — it grows until you save its seed.","樱花":"Cherry blossom","月季":"Rose","波斯菊":"Cosmos","木本 · 春天开花，一簇几朵，短梗微垂":"Woody · blooms in spring, small clusters on short drooping stalks","半木本 · 春到秋反复开花，单朵长梗":"Semi-woody · blooms again and again from spring to autumn, single flowers on long stalks","草本 · 夏末到秋天开花，枝叶轻盈":"Herbaceous · blooms from late summer to autumn, light and airy","休花期":"Not in bloom","含苞待放":"Budding","花谢了":"Blooms fading","盛开中":"In bloom","🪴 移栽区":"🪴 Transplant pot","留种后的老植物都移栽在这里，花会跟着季节开合。":"Old plants are transplanted here after you save their seeds. Their flowers follow the seasons.","它被移栽到了档案馆的大花盆里，会继续随季节开花":"It was transplanted into the big pot in the archive and will keep blooming with the seasons","留种后，这株植物会被移栽到档案馆的大花盆里继续保留，你会领到一颗新种子，养分从零开始。确定吗？":"After you save its seed, this plant is transplanted into the big pot in the archive, and you get a new seed with nutrients back to zero. Continue?","可以留种，开启它的下一段生命——它会移栽到档案馆的大花盆里，新一代会继承这一代的一点偏好。":"You can save its seed and begin its next life — it moves to the big pot in the archive, and the next generation inherits a little of its taste."});
 function _pre(n,t){ return n ? (n+', '+t.charAt(0).toLowerCase()+t.slice(1)) : t; }
 const PAT=[
  [/^(\d{4})年(\d{1,2})月(\d{1,2})日(?: (\d{1,2}:\d{2}))?$/, m=>MON[+m[2]-1]+' '+(+m[3])+', '+m[1]+(m[4]?' '+m[4]:'')],
@@ -461,13 +471,13 @@ const _i18nObs=new MutationObserver(muts=>{
 _i18nObs.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['placeholder','title']});
 
 const TYPES=[
- {id:1,ic:'🐑',name:'羊球状',desc:'硬块,便秘',color:'#9c6b3f'},
- {id:2,ic:'🌰',name:'香肠块状',desc:'偏硬',color:'#b07d3f'},
- {id:3,ic:'🌭',name:'带裂纹',desc:'正常',color:'#c8873a'},
- {id:4,ic:'🍌',name:'光滑香肠',desc:'完美',color:'#d9b23c'},
- {id:5,ic:'🟤',name:'软块状',desc:'偏软',color:'#a68a5a'},
- {id:6,ic:'💧',name:'糊状',desc:'较稀',color:'#7a9a6b'},
- {id:7,ic:'🌊',name:'水状',desc:'腹泻',color:'#5a8ab0'},
+ {id:1,ic:'🐑',name:'羊粪球便',desc:'硬块,便秘',color:'#9c6b3f'},
+ {id:2,ic:'🌰',name:'结块香肠便',desc:'偏硬',color:'#b07d3f'},
+ {id:3,ic:'🌭',name:'裂纹香肠便',desc:'正常',color:'#c8873a'},
+ {id:4,ic:'🍌',name:'光滑香肠便',desc:'完美',color:'#d9b23c'},
+ {id:5,ic:'🟤',name:'软块便',desc:'偏软',color:'#a68a5a'},
+ {id:6,ic:'💧',name:'糊糊便',desc:'较稀',color:'#7a9a6b'},
+ {id:7,ic:'🌊',name:'水样便',desc:'腹泻',color:'#5a8ab0'},
 ];
 const COLORS=[
  {id:'棕色',dot:'#7a5230'},{id:'黄色',dot:'#d9b23c'},{id:'深褐',dot:'#4a3220'},
@@ -582,7 +592,7 @@ function openEdit(idx){
 }
 document.getElementById('editCancel').onclick=()=>closeOv(document.getElementById('editOv'));
 document.getElementById('editSave').onclick=()=>{
-  if(!editSel.type){ alert('至少选一下形状吧'); return; }
+  if(!editSel.type){ alert('至少选一下便便形状吧'); return; }
   const dV=document.getElementById('edDate').value, tV=document.getElementById('edTime').value;
   const time=(dV&&tV)? new Date(`${dV}T${tV}`).getTime() : editOrigTime;
   if(isNaN(time) || time>Date.now()+5*60000){ alert('不能记录未来的时间哦'); return; }
@@ -714,7 +724,7 @@ function showToast(title,msgs,special,closeText){
   document.getElementById('toastClose').textContent=closeText||pick(EAT_PHRASES);
   openOv(ov);
 }
-document.getElementById('toastClose').onclick=()=>closeOv(document.getElementById('toastOv'));
+document.getElementById('toastClose').onclick=()=>{ closeOv(document.getElementById('toastOv')); setTimeout(ensureSpecies,50); };
 document.getElementById('dayClose').onclick=()=>closeOv(document.getElementById('dayOv'));
 document.getElementById('dayOv').onclick=(e)=>{ if(e.target.id==='dayOv') closeOv(document.getElementById('dayOv')); };
 
@@ -734,7 +744,7 @@ function longestStreak(list){
 
 const histOpen=new Set();
 document.getElementById('btnSave').onclick=()=>{
-  if(!sel.type){ alert('至少选一下形状吧'); return; }
+  if(!sel.type){ alert('至少选一下便便形状吧'); return; }
   const list=loadData();
   const dVal=document.getElementById('dateInput').value;
   const tVal=document.getElementById('timeOnlyInput').value;
@@ -781,7 +791,7 @@ document.getElementById('btnSave').onclick=()=>{
   if(bonus>0){ entry.xp+=bonus; saveData(newList); }
 
   document.querySelectorAll('#page-record .opt.sel').forEach(o=>o.classList.remove('sel'));
-  sel={type:null,color:null,size:null,smell:null,mood:null,duration:null,place:null};
+  Object.keys(sel).forEach(k=>{ sel[k]=null; });
   { const p=nowLocalParts(); document.getElementById('dateInput').value=p.date; document.getElementById('timeOnlyInput').value=p.time; }
 
   const stageNow=plantStageForPoints(plantPointsSnapshot());
@@ -793,7 +803,7 @@ document.getElementById('btnSave').onclick=()=>{
   }
   render();
   window.scrollTo(0,0);
-  const pe=document.getElementById('plantEmoji');
+  const pe=document.getElementById('plantArt');
   pe.classList.remove('pop'); void pe.offsetWidth; pe.classList.add('pop');
   spawnFloaty(usedToday>=DAILY_FERT_CAP ? '已经满了 💩' : `+${fert.pts} 养分`);
 };
@@ -1200,7 +1210,7 @@ function startNewGeneration(){
   const archive=getArchive();
   const legacyItem=pick(LEGACY_ITEMS);
   const timeline=getStageLog();
-  archive.push({gen, name:getPlantName()||`第${gen}代`, start:genStart, end:Date.now(), total:genEntries.length, domLabel, days, legacyItem, timeline});
+  archive.push({gen, name:getPlantName()||`第${gen}代`, start:genStart, end:Date.now(), total:genEntries.length, domLabel, days, legacyItem, timeline, species:getSpeciesChoice(gen)||SPECIES_ROT[(gen-1)%3]});
   localStorage.setItem('poop_plant_archive', JSON.stringify(archive));
   if(domType) localStorage.setItem('poop_plant_trait', JSON.stringify({type:domType, label:domLabel, bonusPct:0.15}));
   setBase(0); setLedger([]); setStageLog({});
@@ -1208,7 +1218,7 @@ function startNewGeneration(){
   localStorage.setItem('poop_plant_genStart', Date.now());
   localStorage.removeItem('poop_plant_lastEvtMsg');
   localStorage.removeItem('poop_plant_nextEvtAt');
-  showToast('🌱 新的生命开始了', [`第${gen}代完整走完了一生：共施肥 ${genEntries.length} 次，相伴 ${days} 天`, domType?`新一代继承了偏好：更爱${domLabel}`:'新一代是一张白纸，从头开始', `它留下了一份遗产：${legacyItem}`], true, '好的，继续');
+  showToast('🌱 新的生命开始了', [`第${gen}代完整走完了一生：共施肥 ${genEntries.length} 次，相伴 ${days} 天`, '它被移栽到了档案馆的大花盆里，会继续随季节开花', domType?`新一代继承了偏好：更爱${domLabel}`:'新一代是一张白纸，从头开始', `它留下了一份遗产：${legacyItem}`], true, '好的，继续');
   render();
 }
 function weightedPick(list){
@@ -1303,6 +1313,562 @@ function spawnFloaty(text){
   const s=document.createElement('div'); s.className='floaty'; s.textContent=text;
   card.appendChild(s); setTimeout(()=>s.remove(),1200);
 }
+/* ===== PlantArt：纯代码生成的 SVG 植物。new PlantArt(svgElement)
+   生长进度 prog∈[0,1] 完全由施肥累计的养分决定（PlantArt.prog(养分)），与天数无关 ===== */
+function paHash(x){x=x>>>0;x^=x>>>16;x=Math.imul(x,0x85ebca6b);x^=x>>>13;x=Math.imul(x,0xc2b2ae35);x^=x>>>16;return x>>>0;}
+/* 种子 = f(时刻, 日期)：x=一天中的第几分钟，y=第几天。两个变量各自先散列再混合——
+   只要时刻不同或日期不同，种子就不同、长出来的植物不同；时刻和日期都相同（精确到分钟）才会一样 */
+function plantSeedFromTime(ms){
+  var d=new Date(ms),min=d.getHours()*60+d.getMinutes(),day=Math.floor((ms-d.getTimezoneOffset()*60000)/86400000);
+  var hx=paHash(Math.imul(min+1,2654435761)),hy=paHash(Math.imul(day,40503)^0x5bd1e995);
+  return ((hx^Math.imul(hy,0x27d4eb2d))>>>0)||1;
+}
+function PlantArt(svg){
+var seed=7,D=4,tree,S,cur=0,raf=0,T0=performance.now(),dk=false,ID='',lid=0;
+var PI=Math.PI;
+/* 品种：参数决定生长姿态（分枝角度、主干优势、向上程度）和花形。
+   wd=木质化程度（樱花木本、月季半木本、波斯菊草本几乎不变棕）；pl/dr/pw=花梗长度范围/下垂程度/粗细 */
+var SP={
+sakura:{k:'sakura',D:4,rl:58,rw:6,r:.74,sr:.58,sc:[6,14],ss:[26,40],bend:.08,pull:.15,pk:.7,nl:3,la:[40,60],ls:1,lw:.5,fp:.3,fs:1,bt:[22,52],wd:1,pl:[12,17],dr:.75,pw:.9,
+ pal:[{l:'#f6d3d8',m:'#efb3c0',d:'#dd8499'},{l:'#fbf3f4',m:'#f4dfe3',d:'#e3a9b6'},{l:'#f0a8bc',m:'#e48aa4',d:'#cc5478'},{l:'#ecd0e6',m:'#dcb0d2',d:'#b878ac'}],c:null},
+rose:{k:'rose',D:3,rl:72,rw:5,r:.82,sr:.62,sc:[3,9],ss:[22,34],bend:.06,pull:.25,pk:.5,nl:3,la:[45,65],ls:1.15,lw:.6,fp:.35,fs:1.3,bt:[28,58],wd:.75,pl:[14,19],dr:0,pw:1.8,
+ pal:[{l:'#e8607a',m:'#d03a5a',d:'#9c1f3d'},{l:'#f6b8c4',m:'#ee93a6',d:'#d0546f'},{l:'#f8e08a',m:'#f0c850',d:'#d49a1e'},{l:'#fdf6f0',m:'#f2e0d8',d:'#d9a898'},{l:'#f9b08c',m:'#f08a64',d:'#d0583a'}],c:{'--bloomc':'#e9b44c'}},
+cosmos:{k:'cosmos',D:3,rl:66,rw:3.4,r:.8,sr:.64,sc:[3,8],ss:[24,38],bend:.08,pull:.3,pk:.55,nl:4,la:[50,75],ls:1,lw:.16,fp:.3,fs:1.1,bt:[62,82],wd:.12,pl:[15,21],dr:.12,pw:1.2,
+ pal:[{l:'#f9c7de',m:'#ee8fba',d:'#c2428a'},{l:'#ffffff',m:'#f3e8f0',d:'#d6a4c4'},{l:'#fbc97a',m:'#f5a03c',d:'#d8701a'},{l:'#e86aa8',m:'#cf3f86',d:'#9c1f62'}],c:{'--bloomc':'#f0b730'}}};
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+var clamp=function(v,a,b){return Math.max(a,Math.min(b,v))};
+var f1=function(v){return v.toFixed(1)};
+function isDark(){var h=document.documentElement.getAttribute('data-theme');return h==='dark'||(h!=='light'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);}
+/* 深色模式下花色压暗一点、略降饱和（固定十六进制不会跟 CSS 变量走，所以在生成渐变时处理） */
+function tone(hex){
+  if(!dk)return hex;
+  var n=parseInt(hex.slice(1),16),r=n>>16&255,g=n>>8&255,b=n&255,l=.299*r+.587*g+.114*b;
+  function m(c){return Math.round(clamp(c*.8+l*.1,0,255))}
+  return '#'+((1<<24)+(m(r)<<16)+(m(g)<<8)+m(b)).toString(16).slice(1);
+}
+/* 养分 → 生长进度。锚点对齐 app 的阶段门槛：80 破土、220 抽枝、450 长叶、800 开始分化花苞、1300、2200 满开 */
+var MAP=[[0,0],[80,.02],[220,.17],[450,.43],[800,.75],[1300,.9],[2200,1]],SEED=.012;
+function progOf(n){
+  if(!(n>0))return 0;if(n>=MAP[MAP.length-1][0])return 1;
+  for(var i=1;i<MAP.length;i++)if(n<=MAP[i][0]){var a=MAP[i-1],b=MAP[i];return a[1]+(b[1]-a[1])*(n-a[0])/(b[0]-a[0]);}
+  return 1;
+}
+function useSp(k,sd){
+  S=SP[k];if(sd)seed=sd;
+  svg.style.removeProperty('--bloomc');
+  if(S.c)for(var v in S.c)svg.style.setProperty(v,S.c[v]);
+  tree=build(seed);settle();
+}
+
+/* 叶子去重：把整株长齐后画一遍，记录每片叶的位置；如果后面的叶子和前面某片叶重叠得太厉害
+   （轴线上 5 个采样点至少 4 个落在对方叶宽范围内），就不画后面这片，避免两片叶子叠成一团、叶柄挤在一起 */
+function ptSeg(px,py,a){
+  var vx=a.dx*a.L,vy=a.dy*a.L,t=clamp(((px-a.x)*vx+(py-a.y)*vy)/(vx*vx+vy*vy),0,1),cx=a.x+vx*t,cy=a.y+vy*t;
+  return Math.sqrt((px-cx)*(px-cx)+(py-cy)*(py-cy));
+}
+function clash(a,b){
+  var thr=(a.w+b.w)*.5+.2,h1=0,h2=0,k,t;
+  for(k=0;k<5;k++){
+    t=(k+.5)/5;
+    if(ptSeg(b.x+b.dx*b.L*t,b.y+b.dy*b.L*t,a)<thr)h1++;
+    if(ptSeg(a.x+a.dx*a.L*t,a.y+a.dy*a.L*t,b)<thr)h2++;
+  }
+  return h1>=4||h2>=4;
+}
+function settle(){
+  var rec=[],kept=[];
+  render(1,{dry:rec});
+  rec.forEach(function(c){
+    var i;c.l.hide=false;
+    for(i=0;i<kept.length;i++)if(clash(kept[i],c)){c.l.hide=true;return;}
+    kept.push(c);
+  });
+}
+
+/* 整株植物的形状只在这里生成一次，之后天数变化只改变"长到哪一步" */
+function build(sd){
+  var R=rng(sd),terms=[],rr=function(a){return a[0]+(a[1]-a[0])*R()};
+  D=S.D;
+  /* 主干优势：续生枝只小角度偏离并被拉向竖直，侧枝反向、更大角度、更短更细；弯曲很小，不是藤蔓 */
+  function mk(a,len,w,d){
+    var n={a:a,len:len,w:w,d:d,bend:(R()-.5)*2*S.bend,leaves:[],kids:[],tip:null,fls:null};
+    var nl=d===0?S.nl:2;
+    for(var i=0;i<nl;i++)n.leaves.push({t:.25+.45*R(),side:i%2?1:-1,ang:S.la[0]+R()*(S.la[1]-S.la[0]),s:(7+R()*3)*S.ls*(1.1-d*.1),tone:R()>.5});
+    /* 同一侧的叶子沿枝至少隔开 .2（不调用 R，不改树形），避免两片叶子挤在同一处、两根叶柄叠在一起；
+       再给每片叶一个确定的前/后：后叶画在枝的下面（被枝挡住），前叶画在枝的上面，遮挡关系有前有后 */
+    [-1,1].forEach(function(sd){
+      var ls=n.leaves.filter(function(l){return l.side===sd}).sort(function(p,q){return p.t-q.t});
+      for(var k=1;k<ls.length;k++)if(ls[k].t-ls[k-1].t<.2)ls[k].t=Math.min(.88,ls[k-1].t+.2);
+    });
+    n.leaves.forEach(function(l,i){l.back=paHash(Math.round(a*100)+i*7919+d*104729+(l.side>0?5:0))%100<38;});
+    if(d<D){
+      var two=R()<S.pk,sg=R()>.5?1:-1,ca=a+sg*rr(S.sc),sa=a-sg*rr(S.ss);
+      ca+=(-90-ca)*S.pull;sa+=(-90-sa)*S.pull;
+      n.kids.push(mk(ca,len*S.r*(.95+.1*R()),w*.68,d+1));
+      if(two){var sk=mk(sa,len*S.sr*(.95+.1*R()),w*.5,d+1);sk.side=true;n.kids.push(sk);}
+    }else{n.tip={ang:(R()-.5)*30,s:10,tone:R()>.5};terms.push(n);}
+    return n;
+  }
+  var root=mk(-90,S.rl,S.rw,0),fl=[],N=0;
+  terms.forEach(function(n){if(R()>S.fp)fl.push(n)});
+  if(!fl.length)fl.push(terms[0]);
+  /* 每个开花的枝梢带一簇花：樱花 1–3 朵、短花梗、略微下垂；月季/波斯菊单朵长花梗。
+     每朵花有自己的开始时间、朝向、大小和盛开形态 */
+  fl.forEach(function(n,i){
+    var k=S.k==='sakura'?1+(R()<.8?1:0)+(R()<.35?1:0):1,base=.81+.07*(i/Math.max(1,fl.length-1));
+    n.fls=[];
+    for(var j=0;j<k;j++){
+      var f={s:base+j*.01+R()*.01,r:R()*360,v:(i+j+Math.floor(R()*3))%3,b:rr(S.bt),c:Math.floor(R()*S.pal.length),sc:(.88+R()*.26)*(k>1?.86:1)};
+      var off=S.k==='sakura'?(k===1?(R()-.5)*30:-50+100*(j/(k-1))+(R()-.5)*16):(R()-.5)*10;
+      n.fls.push({f:f,p:{off:off,len:rr(S.pl),dr:S.dr}});
+      N++;
+    }
+  });
+  return {root:root,N:N};
+}
+
+/* 叶子：沿一条微弯的叶轴生成叶形（基部尖、最宽处偏下、尖端渐收），cu 为尖端下垂量。
+   中脉是从基部向叶尖渐细的实心形，侧脉是极细的弧线，不再是一根等粗的线 */
+function leaf(arr,x,y,a,s,tone,cu,pw){
+  if(s<1.2)return;
+  var L=s*1.9,w=s*S.lw*.8,c=(cu||0)*L,N=10,A=[],B=[],ax=[],ay=[],nx=[],ny=[],hw=[],i,t,tx,ty,m,k;
+  for(i=0;i<=N;i++){
+    t=i/N;ax[i]=c*t*t;ay[i]=-L*t;tx=2*c*t;ty=-L;m=Math.sqrt(tx*tx+ty*ty);
+    nx[i]=-ty/m;ny[i]=tx/m;
+    hw[i]=w*(t<.42?Math.sin(Math.PI/2*Math.pow(t/.42,1.35)):Math.cos(Math.PI/2*Math.pow((t-.42)/.58,.95)));
+    A.push(f1(ax[i]+nx[i]*hw[i]*1.05)+' '+f1(ay[i]+ny[i]*hw[i]*1.05));
+    B.push(f1(ax[i]-nx[i]*hw[i]*.95)+' '+f1(ay[i]-ny[i]*hw[i]*.95));
+  }
+  var col=tone?'var(--leaf1)':'var(--leaf2)',o='<g transform="translate('+f1(x)+' '+f1(y)+')rotate('+(a+90).toFixed(0)+')">';
+  o+='<path d="M'+A.join('L')+'L'+B.slice().reverse().join('L')+'Z" fill="'+col+'"/>';
+  /* 背光一侧略深，基部略深：用半片叶形叠色，而不是整片一刀切 */
+  var H=[];for(i=0;i<=N;i++)H.push(f1(ax[i])+' '+f1(ay[i]));
+  o+='<path d="M'+B.join('L')+'L'+H.slice().reverse().join('L')+'Z" fill="var(--leafd)" opacity=".2"/>';
+  /* 中脉：从叶柄末端的颜色（茎色、与叶柄等宽）起，向叶尖渐变成叶脉色并渐细；起点往叶柄里多伸一点，所以柄→脉没有接缝 */
+  var pw2=Math.max(.2,(pw||0)/2),gid=ID+'pa-lm'+(lid++),M1=[f1(pw2)+' 1.4'],M2=[f1(-pw2)+' 1.4'];
+  for(i=0;i<=N-1;i++){var mw=Math.max(.06+.4*Math.pow(1-i/N,1.2)*Math.min(1,w/3),pw2*Math.pow(1-i/N,1.6));M1.push(f1(ax[i]+nx[i]*mw)+' '+f1(ay[i]+ny[i]*mw));M2.push(f1(ax[i]-nx[i]*mw)+' '+f1(ay[i]-ny[i]*mw));}
+  o+='<defs><linearGradient id="'+gid+'" gradientUnits="userSpaceOnUse" x1="0" y1="1.4" x2="0" y2="'+f1(-L*.45)+'"><stop offset="0" style="stop-color:var(--stem)"/><stop offset="1" style="stop-color:var(--leafd);stop-opacity:.5"/></linearGradient></defs><path d="M'+M1.join('L')+'L'+M2.reverse().join('L')+'Z" fill="url(#'+gid+')"/>';
+  if(w>=2.2){
+    var sv='';
+    [3,5,7].forEach(function(ki){
+      [1,-1].forEach(function(sd){
+        var ei=Math.min(N-1,ki+2),ex=ax[ei]+sd*nx[ei]*hw[ei]*.72,ey=ay[ei]+sd*ny[ei]*hw[ei]*.72;
+        var cx=ax[ki+1]+sd*nx[ki+1]*hw[ki+1]*.6,cy=ay[ki+1]+sd*ny[ki+1]*hw[ki+1]*.6;
+        sv+='M'+f1(ax[ki])+' '+f1(ay[ki])+'Q'+f1(cx)+' '+f1(cy)+' '+f1(ex)+' '+f1(ey);
+      });
+    });
+    o+='<path d="'+sv+'" stroke="var(--leafd)" stroke-width=".28" stroke-opacity=".3" fill="none" stroke-linecap="round"/>';
+  }
+  arr.push(o+'</g>');
+}
+
+/* 花瓣：顶端有浅缺口，底部颜色深、向外变浅，带中脉和两条侧脉 */
+function petal(h,w,fill,rot,dc,wl){
+  var d='M0 0C'+(-w*.9)+' '+(-h*.25)+' '+(-w*.8)+' '+(-h*.88)+' '+(-w*.2)+' '+(-h)+'Q0 '+(-h*.9)+' '+(w*.2)+' '+(-h)+'C'+(w*.8)+' '+(-h*.88)+' '+(w*.9)+' '+(-h*.25)+' 0 0Z';
+  var v='<path d="M0 -.5L0 '+(-h*.78)+'M0 '+(-h*.25)+'L'+(-w*.42)+' '+(-h*.6)+'M0 '+(-h*.25)+'L'+(w*.42)+' '+(-h*.6)+'" stroke="'+dc+'" stroke-opacity=".4" stroke-width=".35" fill="none" stroke-linecap="round"/>';
+  return '<g transform="rotate('+rot+')"><path d="'+d+'" fill="url(#'+fill+')" stroke="'+dc+'" stroke-opacity=".35" stroke-width=".4"/>'+(wl>.03?'<path d="'+d+'" fill="#8a6a45" opacity="'+f1(wl*.5)+'"/>':'')+v+'</g>';
+}
+/* 萼片：披针形，和花瓣一样按三维方向投影，所以花苞时萼片与花苞等比例、同样被花的倾角压短 */
+function sepalPath(L){var w=L*.3;return '<path d="M0 0C'+(-w)+' '+(-L*.25)+' '+(-w*.8)+' '+(-L*.7)+' 0 '+(-L)+'C'+(w*.8)+' '+(-L*.7)+' '+w+' '+(-L*.25)+' 0 0Z" fill="var(--leafd)"/>';}
+/* 花：每片花瓣按三维方向投影到屏幕。o 为开放程度 0→1，花瓣从并拢的花苞逐渐张开；
+   f.b 是花轴朝向观众的倾角（樱花、月季侧着开，波斯菊近乎正对），f.r 绕花轴随机转动。
+   花瓣宽度按其宽度方向在屏幕上的投影收窄（透视）。
+   bs=花苞长大比例(0.35→1)，pk=花瓣露出比例(小时花瓣藏在萼片里，只见绿色花苞) */
+function bloom(f,o,bs,pk,wt){
+  wt=wt||0;
+  var items=[],v=f.v,key=S.k,pc=S.pal[f.c],b=f.b*PI/180,cb=Math.cos(b),sb=Math.sin(b);
+  var gate=clamp((o-.6)/.3,0,1),sg=.08-.7*(1-gate);
+  var e=o*o*(3-2*o),sz=(.5+.5*Math.min(1,o*1.6))*bs,wf=.6+.4*e;
+  function dir(t,ph){var st=Math.sin(t),ct=Math.cos(t);return [st*Math.cos(ph),ct*cb-st*Math.sin(ph)*sb,ct*sb+st*Math.sin(ph)*cb];}
+  function ring(n,h,w,fill,off,tm){
+    for(var j=0;j<n;j++){
+      if(wt>0&&(paHash(Math.round(f.r*10)+f.c*977+j*7919+Math.round(off*3)+Math.round(h*100)*31)%1000)/1000<wt*1.1-.05)continue;
+      var ph=(off+j*360/n+f.r)*PI/180,d=dir(tm*PI/180*e,ph),l2=Math.sqrt(d[0]*d[0]+d[1]*d[1]),len=Math.max(l2,.3);
+      var ws=1;
+      if(l2>.08){var u0=d[0]/l2,u1=d[1]/l2;ws=.45+.55*Math.min(1,Math.abs(-Math.sin(ph)*u1+Math.cos(ph)*sb*u0));}
+      items.push([d[2],'<g transform="rotate('+f1(Math.atan2(d[0],d[1])*180/PI)+')scale(1 '+f1(len)+')">'+petal(h*sz*pk,w*sz*wf*ws*Math.max(.7,pk),ID+fill+f.c,0,tone(pc.d),wt)+'</g>']);
+    }
+  }
+  function stam(n,r0,dr){
+    if(o<.4||wt>.65)return;
+    var k=clamp((o-.4)/.4,0,1);
+    for(var j=0;j<n;j++){
+      var L=(r0+(j%2)*dr)*k,d=dir(.3+.12*(j%2),(j*360/n+f.r)*PI/180),px=d[0]*L,py=-d[1]*L;
+      items.push([d[2]+sg,'<path d="M0 0L'+f1(px)+' '+f1(py)+'" stroke="'+tone(pc.d)+'" stroke-opacity=".6" stroke-width=".35"/><circle cx="'+f1(px)+'" cy="'+f1(py)+'" r=".85" fill="var(--bloomc)"/>']);
+    }
+  }
+  /* 花托 + 4 枚萼片：花托是一个从花梗宽度逐渐张开的小杯（颜色由茎色渐变到萼片色），和花梗无缝衔接；
+     萼片花苞时贴紧包住花瓣（倾角 10°），开花时向外翻下去（倾角 105°），长度也随之缩短 */
+  var hw0=S.pw/2/(S.fs*f.sc)+.04,cr=Math.max(2.5*bs,hw0*1.2),CT=7;
+  items.push([-9,'<path d="M'+f1(-hw0)+' '+CT+'C'+f1(-hw0)+' '+f1(CT*.5)+' '+f1(-cr*1.05)+' 3.2 '+f1(-cr)+' .3C'+f1(-cr*.9)+' -2.3 '+f1(cr*.9)+' -2.3 '+f1(cr)+' .3C'+f1(cr*1.05)+' 3.2 '+f1(hw0)+' '+f1(CT*.5)+' '+f1(hw0)+' '+CT+'Z" fill="url(#'+ID+'cup)"/>']);
+  var sl=(5.6-1.2*e)*bs,stl=(10+95*e)*PI/180;
+  for(var q=0;q<4;q++){
+    var sph=(f.r+45+q*90)*PI/180,sd=dir(stl,sph),sl2=Math.max(Math.sqrt(sd[0]*sd[0]+sd[1]*sd[1]),.3);
+    items.push([sd[2]-.15,'<g transform="rotate('+f1(Math.atan2(sd[0],sd[1])*180/PI)+')scale(1 '+f1(sl2)+')">'+sepalPath(sl)+'</g>']);
+  }
+  if(key==='sakura'){
+    if(v===0){ring(5,12.4,5,'petalb',36,86);ring(5,11,4.6,'petal',0,78);stam(9,5,1.5);}
+    else if(v===1){ring(5,13,5.2,'petalb',36,88);ring(5,12,5,'petal',0,80);ring(5,8.4,3.8,'petal',36,64);stam(6,4,1);}
+    else{ring(5,12.6,5.8,'petalb',36,92);ring(5,11.4,5.4,'petal',0,84);stam(7,6,1.8);}
+  }else if(key==='rose'){
+    if(v===0){ring(5,13,6.4,'petalb',0,88);ring(5,11,5.8,'petalb',36,74);ring(5,8.6,5,'petal',18,48);ring(4,6.2,4,'petal',50,30);ring(3,3.8,2.8,'petal',10,12);}
+    else if(v===1){ring(5,13,6.4,'petalb',0,92);ring(5,11,5.6,'petal',36,70);ring(4,8,4.4,'petal',20,40);stam(8,3.5,1);}
+    else{ring(5,10,5.2,'petalb',0,80);ring(5,8,4.6,'petal',36,62);ring(4,5.6,3.6,'petal',18,35);ring(3,3.4,2.6,'petal',0,15);}
+  }else{
+    if(v===0)ring(8,13,4.8,'petalb',22,90);
+    else if(v===1){ring(8,13,4.6,'petalb',0,90);ring(8,11,4.2,'petal',22.5,86);}
+    else ring(6,12,6,'petalb',0,90);
+    if(o>.5&&wt<.85)items.push([sb+sg,'<circle r="'+f1(3.4*e)+'" fill="var(--bloomc)"/><circle r="'+f1(1.8*e)+'" fill="#c98a1c"/>']);
+  }
+  items.sort(function(p,q){return p[0]-q[0]});
+  return items.map(function(i){return i[1]}).join('');
+}
+/* 每朵花的时间线（prog 单位）：s-0.05 起花梗抽出、花苞由小变大(绿)；s-0.03 起花瓣在萼片里露出颜色；s 起开放 */
+function fpg(f,g){return clamp((g-(f.s-.05))/.03,0,1);}
+function flower(arr,x,y,a,f,g,wt){
+  var t=(g-f.s)/.09,o=clamp(t/.85,0,1),pg=fpg(f,g),bs=t<0?.35+.65*pg:1,pk=t<0?.12+.88*clamp((g-(f.s-.03))/.03,0,1):1;
+  var stg=t<0?(pk<.5?0:1):o<1?2:4;
+  var h='<g transform="translate('+f1(x)+' '+f1(y)+')rotate('+(a+90).toFixed(0)+')scale('+f1(S.fs*f.sc)+')">'+bloom(f,o,bs,pk,wt);
+  arr.push(h+'</g>');
+  return stg;
+}
+/* 花梗：从枝梢出发的一小段曲线，樱花向下垂（末端朝向往水平/下方转），月季、波斯菊基本挺直 */
+function ped(x,y,ang,p,pg){
+  var L=p.len*pg,a0=ang+p.off,c0=Math.cos(a0*PI/180),side=Math.abs(c0)<.05?(p.off>=0?1:-1):(c0>=0?1:-1);
+  var a1=a0+side*p.dr*70,r0=a0*PI/180,r1=a1*PI/180;
+  var cx=x+Math.cos(r0)*L*.55,cy=y+Math.sin(r0)*L*.55,ex=cx+Math.cos(r1)*L*.5,ey=cy+Math.sin(r1)*L*.5;
+  return {x:ex,y:ey,a:a1,cx:cx,cy:cy,d:'M'+f1(x)+' '+f1(y)+'Q'+f1(cx)+' '+f1(cy)+' '+f1(ex)+' '+f1(ey)};
+}
+
+function stageName(prog,cnt,N){
+  if(prog<SEED)return '一颗种子';
+  if(prog<.1)return '发芽';
+  if(prog<.35)return '长叶';
+  if(cnt[4]===N)return '盛开';
+  if(cnt[2]+cnt[3]+cnt[4]>0)return '开花';
+  if(cnt[1]>0)return '结花苞';
+  return '分枝';
+}
+
+/* prog∈[0,1]，可以是小数（生长过渡中间帧）。返回 {name,cnt,N} */
+function draw(prog){var r=render(prog,{});svg.innerHTML=r.html;return r.info;}
+/* o.frag=只生成植物（无盆无土，供博物馆大花盆使用）；o.idp=id 前缀；o.season={open,alpha}=按季节控制花
+   （open 0→1 对应花苞萌发→盛开，alpha 是花的整体不透明度，花谢时淡出） */
+var FP='M0 0C-3 -1.6 -3.3 -6 0 -7.6C3.3 -6 3 -1.6 0 0Z',
+FALLCSS='<style>@keyframes pa-fall{0%{transform:translate(0,0) rotate(0);opacity:0}8%{opacity:1}30%{transform:translate(calc(var(--dx)*.55),calc(var(--dy)*.3)) rotate(calc(var(--rt)*.3))}60%{transform:translate(calc(var(--dx)*.35),calc(var(--dy)*.62)) rotate(calc(var(--rt)*.65))}88%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--rt));opacity:0}}.pa-fall{animation:pa-fall 3.6s linear infinite;transform-box:fill-box;transform-origin:center}@media (prefers-reduced-motion:reduce){.pa-fall{animation:none;opacity:0}}</style>';
+function render(prog,o){
+  o=o||{};ID=o.idp||'';dk=isDark();
+  var season=o.season||null,wl=season&&season.wilt?clamp(season.wilt,0,1):0,rec=o.dry||null;
+  /* 花谢期（wl>0）：不再整体淡出，而是花瓣一片片掉落、残瓣泛褐、花梗下垂，最后连花托一起淡掉 */
+  var al=season?(wl>0?1-clamp((wl-.8)/.2,0,1):clamp(season.alpha,0,1)):1,showF=al>.02;
+  lid=0;
+  var g=prog,gF=season?.70+.30*season.open:g,gg=Math.min(1,g/.75),sm=[],lv=[],lb=[],fw=[],wg=[],fall=[],fcols=[],cnt=[0,0,0,0,0],wn=0;
+  var kw=clamp(gg*1.25,0,1)*S.wd;
+  function lvl(d){return Math.pow(Math.max(0,1-d/(D+.5)),1.4)*kw;}
+  var sm0=[],trunkDD='';
+  /* 叶柄：从茎的中心线出发的变细小多边形（根部粗、叶端细），画在茎的下面，从茎的边缘"长出来"，
+     没有贴在茎面上的圆点或接缝 */
+  function petPoly(bx,by,kx,ky,lx,ly,w0,w1,wa){
+    var Lp=[],Rp=[],i,t,u,px,py,tx,ty,m,h;
+    for(i=0;i<=8;i++){
+      t=i/8;u=1-t;
+      px=u*u*bx+2*u*t*kx+t*t*lx;py=u*u*by+2*u*t*ky+t*t*ly;
+      tx=2*u*(kx-bx)+2*t*(lx-kx);ty=2*u*(ky-by)+2*t*(ly-ky);m=Math.sqrt(tx*tx+ty*ty)||1;
+      h=(w0+(w1-w0)*t)/2;
+      Lp.push(f1(px-ty/m*h)+' '+f1(py+tx/m*h));Rp.push(f1(px+ty/m*h)+' '+f1(py-tx/m*h));
+    }
+    var d='M'+Lp.join('L')+'L'+Rp.reverse().join('L')+'Z',o='<path d="'+d+'" fill="var(--stem)"/>';
+    /* 叶柄根部带茎的木色（浓度 wa），往叶片方向渐变成绿色，所以枝→柄→叶的颜色是连续过渡 */
+    if(wa>.04){
+      var id=ID+'pa-p'+(wn++);
+      wg.push('<linearGradient id="'+id+'" gradientUnits="userSpaceOnUse" x1="'+f1(bx)+'" y1="'+f1(by)+'" x2="'+f1(lx)+'" y2="'+f1(ly)+'"><stop offset="0" style="stop-color:var(--wood);stop-opacity:'+wa.toFixed(2)+'"/><stop offset=".85" style="stop-color:var(--wood);stop-opacity:0"/></linearGradient>');
+      o+='<path d="'+d+'" fill="url(#'+id+')"/>';
+    }
+    return o;
+  }
+  /* out=本枝（及其子枝）的线稿画到哪一层；ov=起点沿切线回退的长度，让子枝伸进母枝内部与母枝同色重叠，
+     接缝处没有描边、没有横线 */
+  function rb(n,x0,y0,ux,uy,wmax,out,ov){
+    var p=clamp(gg*(D+1)-n.d,0,1);
+    if(p<=0)return;
+    ov=ov||0;
+    var x=x0-ux*ov,y=y0-uy*ov;
+    var L=n.len*p,rad=n.a*PI/180,e=rad+n.bend,dx=Math.cos(rad),dy=Math.sin(rad);
+    var ex=x0+Math.cos(e)*L,ey=y0+Math.sin(e)*L;
+    L+=ov;
+    /* 三次贝塞尔：起点切线=父枝梢方向，终点切线=n.a，枝与枝之间没有折角 */
+    var x1=x+ux*L*.45,y1=y+uy*L*.45,x2=ex-dx*L*.4,y2=ey-dy*L*.4;
+    function bz(t){var u=1-t;return [
+      u*u*u*x+3*u*u*t*x1+3*u*t*t*x2+t*t*t*ex,
+      u*u*u*y+3*u*u*t*y1+3*u*t*t*y2+t*t*t*ey,
+      3*u*u*(x1-x)+6*u*t*(x2-x1)+3*t*t*(ex-x2),
+      3*u*u*(y1-y)+6*u*t*(y2-y1)+3*t*t*(ey-y2)];}
+    var hk=n.kids.length>0,bw=Math.min(n.d===0?n.w*(.45+.55*p):n.w,wmax||99),tw=bw*(hk?.3+.38*p:.3);
+    /* 带花的枝梢：花梗一抽出来，枝梢就不再收成尖头，而是以梢宽直接接上花梗（花梗再由梢宽渐粗到自己的粗细） */
+    var bear=!!(n.fls&&p>.99&&showF&&n.fls.some(function(it){return gF>=it.f.s-.03})),pt=(p<1||!hk)&&!bear;
+    /* 叶：叶柄先于枝身画（在枝身下面），叶片画在最上层 */
+    n.leaves.forEach(function(l){
+      var qq=clamp((p-l.t)/.25,0,1);
+      if(qq<=0||(l.hide&&!rec))return;
+      var c=bz(l.t),bx=c[0],by=c[1],tb=Math.atan2(c[3],c[2]);
+      var la=tb*180/PI+l.side*l.ang,s=l.s*qq,pl=s*.95,r1=la*PI/180;
+      var kx=bx+Math.cos(tb+l.side*l.ang*PI/180*.12)*pl*.55,ky=by+Math.sin(tb+l.side*l.ang*PI/180*.12)*pl*.55;
+      var lx=kx+Math.cos(r1)*pl*.5,ly=ky+Math.sin(r1)*pl*.5;
+      var la2=Math.atan2(ly-ky,lx-kx)*180/PI,w0=Math.max(.5,Math.min(clamp(s*.3,.8,2.3),(bw+(tw-bw)*l.t)*.78));
+      var w1=Math.max(.4,w0*.45);
+      out.push(petPoly(bx,by,kx,ky,lx+Math.cos(la2*PI/180)*.9,ly+Math.sin(la2*PI/180)*.9,w0,w1,lvl(n.d)+(lvl(n.d+1)-lvl(n.d))*l.t));
+      if(rec)rec.push({l:l,x:lx,y:ly,dx:Math.cos(la2*PI/180),dy:Math.sin(la2*PI/180),L:s*1.9,w:s*S.lw*.8});
+      leaf(l.back?lb:lv,lx,ly,la2,s,l.tone,.12*(Math.cos(la2*PI/180)>=0?1:-1),w1);
+    });
+    /* 枝条是上细下粗的锥形：底宽=n.w（子枝底宽恰好等于父枝梢宽，衔接无台阶）；
+       还在长、或没有子枝的枝梢收成尖头；长齐且有子枝的枝梢留平口，由子枝接住 */
+    var lp=[],rp=[],i,q,t0,h,m,N=12;
+    for(i=0;i<=N;i++){
+      t0=i/N;q=bz(t0);m=Math.sqrt(q[2]*q[2]+q[3]*q[3])||1;
+      h=(bw+(tw-bw)*t0)/2;
+      /* 基部膨大：主干根部张开（像从土里长出来），侧枝基部有一圈枝领，和母枝自然过渡 */
+      h*=1+(n.d===0?.6:(n.side?.5:0))*Math.pow(Math.max(0,1-t0*L/(n.d===0?9:6)),2);
+      if(pt&&t0>.7)h*=Math.pow((1-t0)/.3,.7);
+      lp.push(f1(q[0]-q[3]/m*h)+' '+f1(q[1]+q[2]/m*h));
+      rp.push(f1(q[0]+q[3]/m*h)+' '+f1(q[1]-q[2]/m*h));
+    }
+    var dd='M'+lp.join('L')+'L'+rp.reverse().join('L')+'Z';
+    if(n.d===0)trunkDD=dd;
+    out.push('<path d="'+dd+'" fill="var(--stem)"/>');
+    /* 老嫩分色：同一形状上叠一层木色，不透明度从枝基部到枝梢递减，且层级越深越浅；
+       子枝起点的木色浓度等于父枝梢的浓度，所以颜色连续。几何完全不变 */
+    var a0=lvl(n.d),a1=lvl(n.d+1);
+    if(a0>.01){
+      var id=ID+'pa-w'+(wn++);
+      wg.push('<linearGradient id="'+id+'" gradientUnits="userSpaceOnUse" x1="'+f1(x)+'" y1="'+f1(y)+'" x2="'+f1(ex)+'" y2="'+f1(ey)+'"><stop offset="0" style="stop-color:var(--wood);stop-opacity:'+a0.toFixed(2)+'"/><stop offset="1" style="stop-color:var(--wood);stop-opacity:'+a1.toFixed(2)+'"/></linearGradient>');
+      out.push('<path d="'+dd+'" fill="url(#'+id+')"/>');
+    }
+    if(n.tip&&!n.fls)leaf(lv,ex,ey,n.a+n.tip.ang,n.tip.s*clamp((p-.5)/.5,0,1),n.tip.tone,0);
+    if(n.fls&&p>.99)n.fls.forEach(function(it){
+      /* 花梗先抽出来，再在梗端开花 */
+      var pg=clamp((gF-(it.f.s-.03))/.05,0,1);
+      if(pg<=0||!showF)return;
+      var pe=ped(ex,ey,n.a,wl>0?{off:it.p.off,len:it.p.len,dr:it.p.dr+wl*.5}:it.p,pg);
+      out.push('<g opacity="'+al.toFixed(2)+'">'+petPoly(ex,ey,pe.cx,pe.cy,pe.x,pe.y,Math.max(.35,tw),Math.max(tw,S.pw*(.4+.6*pg)),0)+'</g>');
+      cnt[flower(fw,pe.x,pe.y,pe.a,it.f,gF,wl)]++;
+      if(wl>.04){
+        fcols.push(it.f.c);
+        /* 正在飘落的花瓣：从花的位置出发，一边旋转一边横向飘着落向土面，循环播放（错开相位，所以始终有花瓣在落） */
+        for(var fi=0,nf=wl<.3?1:2;fi<nf;fi++){
+          var hh=paHash(Math.round(pe.x*10)*131+Math.round(pe.y*10)*7+fi*977+it.f.c),fdx=((hh%1000)/1000-.5)*34,fdy=Math.max(10,268.5-pe.y+((hh>>>10)%5)),frt=((hh>>>14)%2?1:-1)*(180+(hh>>>16)%160),fdu=2.4+fdy/55,fdl=-((hh>>>20)%1000)/1000*fdu;
+          fall.push('<g transform="translate('+f1(pe.x)+' '+f1(pe.y)+')"><g class="pa-fall" style="--dx:'+f1(fdx)+'px;--dy:'+f1(fdy)+'px;--rt:'+frt+'deg;animation-duration:'+fdu.toFixed(2)+'s;animation-delay:'+fdl.toFixed(2)+'s"><path d="'+FP+'" fill="'+tone(S.pal[it.f.c].m)+'"/><path d="'+FP+'" fill="#8a6a45" opacity=".35"/></g></g>');
+        }
+      }
+    });
+    var et=Math.sqrt((ex-x2)*(ex-x2)+(ey-y2)*(ey-y2))||1,tipW=bw+(tw-bw)*1,tx=(ex-x2)/et,ty=(ey-y2)/et;
+    n.kids.forEach(function(k){
+      if(k.side){
+        /* 侧枝从母枝 88% 处长出，整棵侧枝画在母枝身下：枝根藏在母枝里，从母枝边缘"长出"，没有平口 */
+        var c2=bz(.88),m2=Math.sqrt(c2[2]*c2[2]+c2[3]*c2[3])||1,w88=bw+(tw-bw)*.88;
+        rb(k,c2[0],c2[1],c2[2]/m2,c2[3]/m2,w88*.78,sm0,0);
+      }else rb(k,ex,ey,tx,ty,tipW,out,.7);
+    });
+  }
+  var pg='';
+  S.pal.forEach(function(c,i){pg+='<linearGradient id="'+ID+'petal'+i+'" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="'+tone(c.d)+'"/><stop offset=".5" stop-color="'+tone(c.l)+'"/><stop offset="1" stop-color="'+tone(c.l)+'"/></linearGradient><linearGradient id="'+ID+'petalb'+i+'" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="'+tone(c.d)+'"/><stop offset="1" stop-color="'+tone(c.m)+'"/></linearGradient>'});
+  pg+='<linearGradient id="'+ID+'cup" gradientUnits="userSpaceOnUse" x1="0" y1="7" x2="0" y2="0"><stop offset="0" style="stop-color:var(--stem)"/><stop offset="1" style="stop-color:var(--leafd)"/></linearGradient>';
+  var sz=prog<SEED?0:clamp(.2+gg*.8,0,1);
+  var mainBase='<defs>'+pg
+   +'<linearGradient id="'+ID+'potg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:var(--potd)"/><stop offset=".3" style="stop-color:var(--pot)"/><stop offset=".62" style="stop-color:var(--pot)"/><stop offset="1" style="stop-color:var(--potd)"/></linearGradient>'
+   +'<linearGradient id="'+ID+'potm" gradientUnits="userSpaceOnUse" x1="0" y1="276" x2="0" y2="298"><stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>'
+   +'<linearGradient id="'+ID+'rimsh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".2"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>'
+   +'<radialGradient id="'+ID+'pacs"><stop offset="0" stop-color="#000" stop-opacity=".42"/><stop offset=".55" stop-color="#000" stop-opacity=".16"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>'
+   +'<radialGradient id="'+ID+'parc"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset=".5" stop-color="#000" stop-opacity=".26"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient><clipPath id="'+ID+'pasoil"><ellipse cx="150" cy="268.9" rx="51" ry="4.6"/></clipPath>'
+   +'<clipPath id="'+ID+'potclip"><path d="M99 278H201L191 312H109Z"/></clipPath>'
+   +'<mask id="'+ID+'potmask" maskUnits="userSpaceOnUse" x="0" y="0" width="300" height="320"><rect width="300" height="320" fill="url(#'+ID+'potm)"/></mask></defs>'
+   +'<g mask="url(#'+ID+'potmask)"><path d="M99 278H201L191 312H109Z" fill="url(#'+ID+'potg)"/>'
+   +'<rect x="90" y="278" width="120" height="14" fill="url(#'+ID+'rimsh)" clip-path="url(#'+ID+'potclip)"/>'
+   +'<path d="M107 288L113 307" stroke="var(--potl)" stroke-width="3" stroke-linecap="round" fill="none" opacity=".45"/>'
+   +'<path d="M93.2 268.5C92.2 268.9 91.8 271 91.8 272.6C91.8 274.5 92.4 275.9 93.6 276.6A56.4 6.2 0 0 0 206.4 276.6C207.6 275.9 208.2 274.5 208.2 272.6C208.2 271 207.8 268.9 206.8 268.5Z" fill="url(#'+ID+'potg)"/>'
+   +'<ellipse cx="150" cy="268.5" rx="56.8" ry="6" fill="url(#'+ID+'potg)"/>'
+   +'<ellipse cx="150" cy="268.5" rx="56.8" ry="6" fill="var(--potl)" opacity=".4"/>'
+   +'<ellipse cx="150" cy="268.3" rx="52" ry="5.4" fill="var(--potd)"/></g>'
+   +'<ellipse cx="150" cy="268.9" rx="51" ry="4.6" fill="var(--soil)"/>'
+   +'<g fill="#000" opacity=".22"><circle cx="124" cy="268.6" r=".9"/><circle cx="137" cy="270.4" r=".8"/><circle cx="165" cy="270" r=".9"/><circle cx="178" cy="267.8" r=".8"/></g>'
+   +'<g fill="#fff" opacity=".16"><circle cx="131" cy="267" r=".8"/><circle cx="158" cy="270.6" r=".7"/><circle cx="171" cy="268.2" r=".8"/></g>'
+   /* 土面光影（植物之下）：一片偏右下的柔和投影 + 根部一圈环境暗部。两者都被裁在土面椭圆内，随植株长大而变大 */
+   +'<g clip-path="url(#'+ID+'pasoil)"><ellipse cx="'+f1(151+sz*4)+'" cy="269.5" rx="'+f1(8+sz*24)+'" ry="'+f1(1.8+sz*1.9)+'" fill="url(#'+ID+'pacs)" opacity="'+f1(.4+sz*.35)+'"/>'
+   +(prog<SEED?'':'<ellipse cx="150" cy="269.2" rx="'+f1(S.rw*.9+7)+'" ry="2.7" fill="url(#'+ID+'pacs)" opacity=".6"/>')
+   +'</g>'
+   +'<linearGradient id="'+ID+'paocc" gradientUnits="userSpaceOnUse" x1="0" y1="257" x2="0" y2="271.5"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".55" stop-color="#000" stop-opacity=".05"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient>';
+  var pacsD='<radialGradient id="'+ID+'pacs"><stop offset="0" stop-color="#000" stop-opacity=".42"/><stop offset=".55" stop-color="#000" stop-opacity=".16"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>';
+  var paoccD='<linearGradient id="'+ID+'paocc" gradientUnits="userSpaceOnUse" x1="0" y1="257" x2="0" y2="271.5"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".55" stop-color="#000" stop-opacity=".05"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient>';
+  var parcD='<radialGradient id="'+ID+'parc"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset=".5" stop-color="#000" stop-opacity=".26"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>';
+  var fragBase='<defs>'+pg+pacsD+paoccD+parcD+'</defs>'+(prog<SEED?'':'<ellipse cx="'+f1(151+sz*5)+'" cy="272" rx="'+f1(10+sz*28)+'" ry="'+f1(2.4+sz*2.4)+'" fill="url(#'+ID+'pacs)" opacity="'+f1(.5+sz*.3)+'"/><ellipse cx="150" cy="272" rx="'+f1(S.rw*.9+7)+'" ry="3" fill="url(#'+ID+'pacs)" opacity=".6"/>');
+  var base=o.frag?fragBase:mainBase;
+  var body,info={cnt:cnt,N:0};
+  if(prog<SEED){
+    body='<ellipse cx="150" cy="267.8" rx="6" ry="4" fill="var(--soil)" stroke="var(--stem)" stroke-width="1.5"/>';
+  }else{
+    rb(tree.root,150,272.2,0,-1,99,sm,0);
+    /* animation-delay 取负的当前相位：每帧重绘也不会让摇摆重新开始 */
+    var ph=((((performance.now()-T0)/1000)+(o.phase||0))%10).toFixed(2);
+    var occ=trunkDD?'<rect x="110" y="250" width="80" height="24" fill="url(#'+ID+'paocc)" clip-path="url(#'+ID+'pa-tc)"/>':'';
+    body='<defs>'+wg.join('')+(trunkDD?'<clipPath id="'+ID+'pa-tc"><path d="'+trunkDD+'"/></clipPath>':'')+'<clipPath id="'+ID+'pa-sc"><path d="M0 0H300V269.4H'+f1(150+S.rw*1.25+2)+'A'+f1(S.rw*1.25+2)+' 2.1 0 0 1 '+f1(150-S.rw*1.25-2)+' 269.4H0Z"/></clipPath></defs><g clip-path="url(#'+ID+'pa-sc)"><g class="pa-sway" style="animation-delay:-'+ph+'s">'+lb.join('')+sm0.join('')+sm.join('')+occ+lv.join('')+'<g opacity="'+al.toFixed(2)+'">'+fw.join('')+'</g>'+fall.join('')+'</g></g>';
+  }
+  /* 层次（后→前）：土面 → 投影与根部暗部（土面层，在植物之下）→ 植物（茎底按前缘弧线裁掉，像插进土里）
+     → 茎根上一层很淡的暗化，只用来衔接，不再是浮在根部上方的一块阴影 */
+  if(o.frag){
+    var bc=(S.c&&S.c['--bloomc'])||'#e9b44c';
+    body='<g style="--bloomc:'+bc+'">'+body+'</g>';
+  }
+  /* 落在土面上的花瓣（花谢期）：放在植物之下、投影之上，数量随花谢进度增加，末尾和花一起淡掉 */
+  var soilP='';
+  if(wl>.04&&!o.frag&&fcols.length){
+    var ns=Math.round(Math.min(16,3+tree.N*.7)*wl*1.15),so=wl<.7?1:1-(wl-.7)/.3;
+    for(var qi=0;qi<ns;qi++){
+      var hq=paHash(qi*7919+tree.N*131+fcols.length*17),px2=150+((hq%1000)/1000-.5)*2*(14+wl*26),py2=267.9+((hq>>>10)%1000)/1000*2.8,cc=S.pal[fcols[hq%fcols.length]];
+      soilP+='<g transform="translate('+f1(px2)+' '+f1(py2)+')rotate('+(((hq>>>20)%70)-35)+')"><ellipse rx="2.2" ry=".85" fill="'+tone(cc.m)+'"/><ellipse rx="2.2" ry=".85" fill="#8a6a45" opacity=".35"/></g>';
+    }
+    if(soilP)soilP='<g opacity="'+f1(so)+'">'+soilP+'</g>';
+  }
+  /* 根部接触阴影：一小片很软的暗部盖在茎与土面相交处，遮住根部的硬边；范围在原有根部暗部之内（主盆裁在土面椭圆内） */
+  var rootP='';
+  if(prog>=SEED){
+    var rpx=S.rw*1.25+2.6;
+    rootP=o.frag?'<ellipse cx="150" cy="270.4" rx="'+f1(rpx)+'" ry="1.9" fill="url(#'+ID+'parc)"/>'
+      :'<g clip-path="url(#'+ID+'pasoil)"><ellipse cx="150" cy="270.1" rx="'+f1(rpx)+'" ry="1.9" fill="url(#'+ID+'parc)"/></g>';
+  }
+  info.N=tree.N;info.name=stageName(prog,cnt,tree.N);
+  return {html:(fall.length?FALLCSS:'')+base+soilP+body+rootP,info:info};
+}
+
+/* 生长过渡：把显示的天数从当前值缓动到 target（枝条伸长、花慢慢张开）。reduced-motion 下直接跳到目标 */
+function go(target,opt){
+  opt=opt||{};cancelAnimationFrame(raf);
+  var from=cur,dist=Math.abs(target-from),rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function fin(){cur=target;var i=draw(cur);if(opt.onFrame)opt.onFrame(cur,i);if(opt.done)opt.done();}
+  if(opt.instant||rm||dist<.0001){fin();return;}
+  var dur=opt.ms||clamp(dist*6600,700,2600),st0=null;
+  function step(now){
+    if(st0===null)st0=now;
+    var k=clamp((now-st0)/dur,0,1),e=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
+    if(k>=1){fin();return;}
+    cur=from+(target-from)*e;
+    var i=draw(cur);if(opt.onFrame)opt.onFrame(cur,i);
+    raf=requestAnimationFrame(step);
+  }
+  raf=requestAnimationFrame(step);
+}
+useSp('sakura');
+return {
+  species:function(k,sd){useSp(k,sd);return this;},
+  reseed:function(sd){seed=sd;tree=build(seed);settle();},
+  draw:function(d){cur=d;return draw(d);},
+  frag:function(p,o){o=o||{};o.frag=true;return render(p,o);},
+  pot:function(p,o){return render(p,o||{});},
+  go:go,
+  prog:progOf,
+  cur:function(){return cur;},
+  setCur:function(d){cur=d;}
+};
+}
+
+/* ===== 季节花期：[一年中的第几天, 花苞→盛开进度 open, 花的不透明度 alpha]，两点之间线性插值 =====
+   樱花：2 月中萌芽、3 月下旬盛开、4 月中旬花谢；月季：春到秋反复开花（盛夏略少）；波斯菊：夏末到深秋 */
+var PA_SEASON={
+ sakura:[[0,0,0],[46,0,1],[84,1,1],[100,1,1],[118,1,0],[365,0,0]],
+ rose:[[0,0,0],[100,0,1],[125,1,1],[166,1,1],[200,1,.7],[258,1,1],[320,1,1],[339,1,0],[365,0,0]],
+ cosmos:[[0,0,0],[196,0,1],[232,1,1],[304,1,1],[329,1,0],[365,0,0]]};
+function plantSeason(k,date){
+  var d=date||new Date(),doy=Math.floor((d-new Date(d.getFullYear(),0,0))/86400000),kf=PA_SEASON[k]||PA_SEASON.sakura,i,a,b,t;
+  for(i=1;i<kf.length;i++)if(doy<=kf[i][0])break;
+  if(i>=kf.length)i=kf.length-1;
+  a=kf[i-1];b=kf[i];t=b[0]===a[0]?1:(doy-a[0])/(b[0]-a[0]);
+  var open=a[1]+(b[1]-a[1])*t,alpha=a[2]+(b[2]-a[2])*t,label;
+  /* wilt：花谢进度 0→1。只出现在“盛开→不透明度降到 0”的那一段；盛夏月季的 .7 只是花变少，不算花谢 */
+  var wilt=(b[2]<a[2]&&b[2]===0)?Math.max(0,Math.min(1,t)):0;
+  if(alpha<.05||open<.05)label='休花期';else if(open<.6)label='含苞待放';else if(wilt>.12||alpha<.6)label='花谢了';else label='盛开中';
+  return {open:open,alpha:alpha,label:label,wilt:wilt};
+}
+/* ===== 博物馆：留种后的老植物，每株单独一盆（和植物页同款花盆）。items=[{k:品种, seed:种子, gen:第几代}]，
+   植物长到最终形态，花按季节开合；花谢期花瓣会飘落。返回 {html: 网格(每株一个 <svg>), notes:[{gen,k,label}]} ===== */
+function plantMuseum(items,date){
+  var notes=[],cells=[];
+  items.forEach(function(it,q){
+    var sv=document.createElementNS('http://www.w3.org/2000/svg','svg'),pa=new PlantArt(sv);
+    pa.species(it.k,it.seed);
+    var se=plantSeason(it.k,date),r=pa.pot(1,{idp:'mp'+q+'-',season:se,phase:q*1.7});
+    notes.push({gen:it.gen,k:it.k,label:se.label});
+    cells.push('<svg viewBox="0 20 300 300" role="img" aria-label="移栽到花盆里的老植物" style="width:100%;height:auto;display:block">'+r.html+'</svg>');
+  });
+  /* 最新的一代排在最前；只有一株时居中、不撑满 */
+  var html='<div style="display:grid;grid-template-columns:'+(items.length>1?'repeat(2,minmax(0,1fr))':'minmax(0,1fr)')+';gap:2px 8px'+(items.length>1?'':';max-width:62%;margin:0 auto')+'">'+cells.reverse().join('')+'</div>';
+  return {html:html,notes:notes};
+}
+
+/* ===== 选种子：每一代开始时让用户自选品种 ===== */
+const SPECIES_INFO=[
+  {k:'sakura',ic:'🌸',name:'樱花',desc:'木本 · 春天开花，一簇几朵，短梗微垂'},
+  {k:'rose',ic:'🌹',name:'月季',desc:'半木本 · 春到秋反复开花，单朵长梗'},
+  {k:'cosmos',ic:'🌼',name:'波斯菊',desc:'草本 · 夏末到秋天开花，枝叶轻盈'}];
+const SPECIES_ROT=['sakura','rose','cosmos'];
+function getSpeciesChoice(gen){
+  try{ const o=JSON.parse(localStorage.getItem('poop_plant_species')); if(o && o.g===gen && SPECIES_INFO.some(x=>x.k===o.k)) return o.k; }catch(e){}
+  return null;
+}
+let pickerOpen=false;
+function ensureSpecies(){
+  if(pickerOpen) return;
+  const gen=getGen();
+  if(getSpeciesChoice(gen)) return;
+  if(document.querySelector('.overlay.show')) return;   /* 先等当前的弹窗关掉 */
+  const ov=document.getElementById('speciesOv'), list=document.getElementById('spList');
+  if(!ov||!list) return;
+  pickerOpen=true;
+  list.innerHTML='';
+  SPECIES_INFO.forEach(sp=>{
+    const b=document.createElement('button'); b.className='sp-opt'; b.type='button';
+    b.innerHTML=`<span class="ic">${sp.ic}</span><span><b>${tr(sp.name)}</b><small>${tr(sp.desc)}</small></span>`;
+    b.onclick=()=>{
+      try{ localStorage.setItem('poop_plant_species',JSON.stringify({g:gen,k:sp.k})); }catch(e){}
+      pickerOpen=false; closeOv(ov); render();
+    };
+    list.appendChild(b);
+  });
+  openOv(ov);
+}
+setInterval(ensureSpecies,1500);
+
+/* ===== 植物画面：养分 → 生长进度（PlantArt.prog），换代换品种/种子，施肥后生长过渡 ===== */
+const PlantView=(function(){
+  let art=null, key='', shown=0, tgt=0;
+  function init(){ if(art) return true; const svg=document.getElementById('plantSvg'); if(!svg) return false; art=new PlantArt(svg); return true; }
+  function loadShown(g){ try{ const o=JSON.parse(localStorage.getItem('poop_plant_shown')); if(o && o.g===g && isFinite(o.p)) return Math.max(0,Math.min(1,o.p)); }catch(e){} return null; }
+  function saveShown(g,p){ try{ localStorage.setItem('poop_plant_shown',JSON.stringify({g:g,p:Math.round(p*10000)/10000})); }catch(e){} }
+  return {
+    update(pts,gen,genStart){
+      if(!init()) return;
+      const sp=getSpeciesChoice(gen);
+      const k=gen+':'+genStart+':'+(sp||'');
+      if(!sp){ /* 还没选品种：只显示一颗种子 */
+        if(key!==k){ key=k; art.species('sakura',plantSeedFromTime(genStart)); art.draw(0); tgt=0; shown=0; }
+        return;
+      }
+      const target=art.prog(pts);
+      if(k!==key){
+        /* 品种由用户选；种子由领到种子的“时刻 × 日期”决定：时刻不同或日期不同，长出来的植物就不同 */
+        key=k;
+        art.species(sp, plantSeedFromTime(genStart));
+        const saved=loadShown(gen);
+        shown=(saved===null)?target:saved;
+        art.draw(shown); tgt=shown;
+        if(saved===null) saveShown(gen,shown);
+      }
+      if(Math.abs(target-tgt)<0.0003) return;
+      /* 植物页不可见时先不播放，等切回植物页再从上次看到的状态长到现在 */
+      const page=document.getElementById('page-plant');
+      if(!page || !page.classList.contains('active')) return;
+      const grow=target>tgt; tgt=target;
+      art.go(target,{instant:!grow, onFrame:(d)=>{ shown=d; }, done:()=>{ shown=target; saveShown(gen,target); }});
+    }
+  };
+})();
 function renderPlant(list){
   settleEvents();
   checkPlantMilestones();
@@ -1310,8 +1876,7 @@ function renderPlant(list){
   const pts=Math.round((base+pendingAbsorbed)*10)/10;
   const stage=plantStageForPoints(pts);
   logStageIfNew(stage);
-  document.getElementById('plantEmoji').textContent=stage.emoji;
-  document.getElementById('plantStageTitle').textContent=stage.label;
+  document.getElementById('plantStageTitle').textContent=(getGen()>1?`第${getGen()}代 · `:'')+stage.label;
   document.getElementById('plantKaomoji').textContent=(maybeRefreshKaomoji(list), currentKaomoji);
   const name=getPlantName();
   const gen=getGen();
@@ -1331,15 +1896,11 @@ function renderPlant(list){
   let ptsTxt = next ? `养分 ${pts} · 还差 ${Math.max(0,Math.round((next.min-pts)*10)/10)} 到「${next.label}」` : `养分 ${pts} · 已是终极形态`;
   if(pendingTotal>0){ ptsTxt += ` · 另有 ${Math.round(pendingTotal)} 正在吸收中`; }
   document.getElementById('plantPts').textContent=ptsTxt;
-  const emojiEl=document.getElementById('plantEmoji'); const noteEl=document.getElementById('plantNote');
-  if(list.length===0){ noteEl.textContent='还没施过肥，快去记录第一次便便吧'; emojiEl.classList.remove('wilt'); }
-  else{
-    const last=Math.max(...list.map(e=>e.time));
-    const gapDays=daysBetween(last,Date.now());
-    if(gapDays<=0){ noteEl.textContent='今天已经施肥，长势喜人'; emojiEl.classList.remove('wilt'); }
-    else if(gapDays===1){ noteEl.textContent='昨天施过肥，还算滋润'; emojiEl.classList.remove('wilt'); }
-    else{ noteEl.textContent=`已经 ${gapDays} 天没施肥了，有点蔫`; emojiEl.classList.add('wilt'); }
-  }
+  /* 休眠：断签 7 天以上植物进入休眠（变淡、不摇摆）；不再显示任何状态文字 */
+  { const emojiEl=document.getElementById('plantArt'); let dorm=false;
+    if(list.length){ const last=Math.max(...list.map(e=>e.time)); dorm=daysBetween(last,Date.now())>=7; }
+    emojiEl.classList.toggle('dormant',dorm); }
+  PlantView.update(pts,gen,getGenStart());
   maybeRefreshMonologue();
   const monoEl=document.getElementById('plantMono'); if(monoEl) monoEl.textContent=fillN(currentMonologue);
   const evtMsg=localStorage.getItem('poop_plant_lastEvtMsg'); const evtAt=parseFloat(localStorage.getItem('poop_plant_lastEvtAt'));
@@ -1351,9 +1912,6 @@ function renderPlant(list){
       evtEl.textContent=`${agoTxt}：${String(evtMsg).replace(/^[^\u4e00-\u9fffA-Za-z0-9]+/,'')}`;
     } else evtEl.textContent='还没发生过随机事件';
   }
-  const wkEl=document.getElementById('plantWeekCnt'), stEl=document.getElementById('plantStreakCnt');
-  if(wkEl){ const now=Date.now(); wkEl.textContent=list.filter(e=>now-e.time<7*86400000).length; }
-  if(stEl){ stEl.textContent=currentStreak(list); }
 }
 function render(){
   const list=loadData().sort((a,b)=>b.time-a.time);
@@ -1581,7 +2139,7 @@ function buildOverview(){
     row('第一次记录', fmtDay(asc[0].time))+
     row('最近一次记录', fmtDay(last.time)+' '+String(new Date(last.time).getHours()).padStart(2,'0')+':'+String(new Date(last.time).getMinutes()).padStart(2,'0'))+
     '<div class="ovh" style="margin-top:16px">我的习惯</div>'+
-    row('最常见形状', tObj?(tObj.ic+' '+tObj.name):'—')+
+    row('最常见的便便形状', tObj?(tObj.ic+' '+tObj.name):'—')+
     row('最常出现时间', String(bh).padStart(2,'0')+':00–'+String((bh+1)%24).padStart(2,'0')+':00')+
     row('最常出现地点', place||'—')+
     row('最常见心情', mood||'—')+
@@ -1637,15 +2195,22 @@ if(LANG==='en') i18nNode(document.body);
 
 document.querySelectorAll('.popt').forEach(b=>{ b.onclick=()=>{ statsPeriod=b.dataset.period; renderStatsPeriod(); }; });
 document.getElementById('gotoFertBtn').onclick=()=>document.querySelector('[data-p="record"]').click();
-document.getElementById('btnSeed').onclick=()=>{ if(confirm('留种会让当前这株植物的养分归零，重新开始新一代。它的记录会保留在档案馆里，确定吗？')) startNewGeneration(); };
+document.getElementById('btnSeed').onclick=()=>{ if(confirm('留种后，这株植物会被移栽到档案馆的大花盆里继续保留，你会领到一颗新种子，养分从零开始。确定吗？')) startNewGeneration(); };
 document.getElementById('btnArchive').onclick=()=>{
   const arc=getArchive();
   const el=document.getElementById('archiveList');
-  el.innerHTML = arc.length ? arc.slice().reverse().map(a=>{
+  let museumHTML='';
+  if(arc.length){
+    const mus=plantMuseum(arc.map(a=>({k:a.species||SPECIES_ROT[(a.gen-1)%3], seed:plantSeedFromTime(a.start), gen:a.gen})), new Date());
+    const nmOf=k=>tr((SPECIES_INFO.find(x=>x.k===k)||{name:''}).name);
+    const notes=mus.notes.map(n=>LANG==='en'?`Gen ${n.gen} ${nmOf(n.k)}: ${tr(n.label)}`:`第${n.gen}代 ${nmOf(n.k)}：${n.label}`).join(LANG==='en'?' · ':'　');
+    museumHTML=`<div class="card" style="margin-bottom:10px"><b>${tr('🪴 移栽区')}</b><div class="analysis" style="margin:4px 0 8px">${tr('留种后的老植物都移栽在这里，花会跟着季节开合。')}</div><div class="plantart museum">${mus.html}</div><div class="analysis" style="margin-top:6px">${notes}</div></div>`;
+  }
+  el.innerHTML = museumHTML + (arc.length ? arc.slice().reverse().map(a=>{
     const tl=a.timeline?Object.keys(a.timeline).sort((x,y)=>a.timeline[x]-a.timeline[y]).map(k=>`<div style="font-size:11px;color:var(--sub);margin-top:2px">${k} · ${fmtDate(a.timeline[k]).split(' ')[0]}</div>`).join(''):'';
     return `<div class="card" style="margin-bottom:10px"><b>第${a.gen}代 · ${a.name}</b><div class="analysis" style="margin-top:6px">${fmtDate(a.start).split(' ')[0]} ～ ${fmtDate(a.end).split(' ')[0]}<br>共施肥 ${a.total} 次 · 相伴 ${a.days} 天${a.domLabel?`<br>最常见的肥料：${a.domLabel}`:''}${a.legacyItem?`<br>留下的遗产：${a.legacyItem}`:''}</div>${tl?`<div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)">${tl}</div>`:''}</div>`;
   }).join('')
-    : `<div class="empty">现在是第${getGen()}代，还没有一代完整走完</div>`;
+    : `<div class="empty">现在是第${getGen()}代，还没有一代完整走完</div>`);
   openOv(document.getElementById('archiveOv'));
 };
 document.getElementById('archiveClose').onclick=()=>closeOv(document.getElementById('archiveOv'));
